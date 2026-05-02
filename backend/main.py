@@ -1,14 +1,16 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 import uvicorn
-from datetime import datetime
+from datetime import datetime, date
 from data_service import DataService
 from ai_engine import AIEngine
 from frontend_bridge import FrontendBridge
 from chart_data_service import ChartDataService
+from enhanced_ai_engine import EnhancedAIEngine
+from models.energy_data import EnergyDataRecord, EnergyDataBatch, EnergyDataValidationResponse
 
 app = FastAPI(
     title="CampusPulse API",
@@ -30,6 +32,12 @@ data_service = DataService()
 ai_engine = AIEngine()
 frontend_bridge = FrontendBridge()
 chart_service = ChartDataService()
+
+# Geliştirilmiş AI Motoru
+enhanced_ai = EnhancedAIEngine()
+
+# Eren'in veri seti için geçici depolama
+eren_data_storage: List[EnergyDataRecord] = []
 
 # Models
 class RoomStatus(BaseModel):
@@ -503,6 +511,391 @@ def generate_recommendations(analysis: Dict) -> List[str]:
         recommendations.append("PC'ler için otomatik uyku modu ayarlayın")
     
     return recommendations
+
+# Eren'in Veri Seti Endpoint'leri
+@app.post("/api/v1/data/upload", response_model=EnergyDataValidationResponse)
+async def upload_energy_data(record: EnergyDataRecord):
+    """
+    Eren'den gelen tekil enerji verisi kaydını işle
+    Veri doğrulama ve depolama
+    """
+    try:
+        # Veriyi depola
+        eren_data_storage.append(record)
+        
+        # AI motoru için format'a çevir
+        ai_format = record.to_ai_format()
+        
+        return EnergyDataValidationResponse(
+            is_valid=True,
+            processed_records=1,
+            warnings=[],
+            errors=[]
+        )
+        
+    except Exception as e:
+        return EnergyDataValidationResponse(
+            is_valid=False,
+            processed_records=0,
+            errors=[f"Veri işleme hatası: {str(e)}"]
+        )
+
+@app.post("/api/v1/data/batch-upload", response_model=EnergyDataValidationResponse)
+async def upload_energy_data_batch(batch: EnergyDataBatch):
+    """
+    Eren'den gelen toplu enerji verisini işle
+    Batch doğrulama ve depolama
+    """
+    try:
+        # Tüm kayıtları depola
+        eren_data_storage.extend(batch.records)
+        
+        # Batch özeti al
+        summary = batch.get_summary()
+        
+        return EnergyDataValidationResponse(
+            is_valid=True,
+            processed_records=len(batch.records),
+            batch_summary=summary,
+            warnings=[],
+            errors=[]
+        )
+        
+    except Exception as e:
+        return EnergyDataValidationResponse(
+            is_valid=False,
+            processed_records=0,
+            errors=[f"Batch işleme hatası: {str(e)}"]
+        )
+
+@app.get("/api/v1/data/records")
+async def get_energy_records(
+    room_id: Optional[str] = None,
+    start_date: Optional[date] = None,
+    end_date: Optional[date] = None,
+    limit: int = 100
+):
+    """
+    Depolanmış enerji verilerini listele
+    Filtreleme ve sayfalama desteği
+    """
+    filtered_records = eren_data_storage.copy()
+    
+    # Oda ID'sine göre filtrele
+    if room_id:
+        filtered_records = [r for r in filtered_records if r.room_id == room_id]
+    
+    # Tarih aralığına göre filtrele
+    if start_date:
+        filtered_records = [r for r in filtered_records if r.date >= start_date]
+    
+    if end_date:
+        filtered_records = [r for r in filtered_records if r.date <= end_date]
+    
+    # Limit uygula
+    filtered_records = filtered_records[:limit]
+    
+    return {
+        "total_records": len(eren_data_storage),
+        "filtered_records": len(filtered_records),
+        "records": [record.to_dict() for record in filtered_records]
+    }
+
+@app.get("/api/v1/data/rooms")
+async def get_available_rooms():
+    """
+    Sistemdeki mevcut odaları listele
+    """
+    unique_rooms = list(set(record.room_id for record in eren_data_storage))
+    
+    room_stats = {}
+    for room_id in unique_rooms:
+        room_records = [r for r in eren_data_storage if r.room_id == room_id]
+        
+        total_watt = sum(r.total_watt for r in room_records)
+        wasted_cost = sum(r.wasted_cost_tl for r in room_records)
+        wasting_count = len([r for r in room_records if r.is_wasting_energy()])
+        
+        room_stats[room_id] = {
+            "record_count": len(room_records),
+            "total_watt": total_watt,
+            "total_wasted_cost": wasted_cost,
+            "wasting_percentage": (wasting_count / len(room_records)) * 100 if room_records else 0,
+            "avg_watt": total_watt / len(room_records) if room_records else 0
+        }
+    
+    return {
+        "total_rooms": len(unique_rooms),
+        "rooms": room_stats
+    }
+
+@app.delete("/api/v1/data/clear")
+async def clear_energy_data():
+    """
+    Tüm enerji verilerini temizle
+    Test ve development için
+    """
+    global eren_data_storage
+    record_count = len(eren_data_storage)
+    eren_data_storage = []
+    
+    return {
+        "message": f"{record_count} kayıt başarıyla temizlendi",
+        "cleared_at": datetime.now().isoformat()
+    }
+
+# Geliştirilmiş AI Endpoint'leri
+@app.get("/api/v2/ai/analysis/{room_id}")
+async def get_enhanced_room_analysis(room_id: str):
+    """
+    Geliştirilmiş oda analizi
+    Anomali + Teşhis + Finansal analiz
+    """
+    try:
+        # Mevcut veriyi al
+        current_data = data_service.get_room_current_status(room_id)
+        
+        if not current_data:
+            raise HTTPException(status_code=404, detail=f"Room {room_id} not found")
+        
+        # Kapsamlı analiz yap
+        analysis = enhanced_ai.comprehensive_analysis(room_id, current_data)
+        
+        return {
+            "success": True,
+            "data": analysis
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
+
+@app.get("/api/v2/ai/batch-analysis")
+async def get_batch_analysis():
+    """
+    Tüm odalar için toplu analiz
+    """
+    try:
+        # Tüm odaların mevcut durumunu al
+        all_rooms = data_service.get_all_rooms_current_status()
+        
+        if not all_rooms:
+            return {
+                "success": True,
+                "data": {
+                    "summary": {
+                        "total_rooms": 0,
+                        "wasting_rooms": 0,
+                        "critical_rooms": 0,
+                        "total_waste_cost": 0.0,
+                        "total_potential_savings": 0.0
+                    },
+                    "rooms": [],
+                    "timestamp": datetime.now().isoformat()
+                }
+            }
+        
+        # Toplu analiz yap
+        batch_result = enhanced_ai.batch_analyze_rooms(all_rooms)
+        
+        return {
+            "success": True,
+            "data": batch_result
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Batch analysis error: {str(e)}")
+
+@app.get("/api/v2/ai/quick-diagnosis/{room_id}")
+async def get_quick_diagnosis(room_id: str):
+    """
+    Hızlı teşhis - tek satır sonuç
+    """
+    try:
+        # Mevcut veriyi al
+        current_data = data_service.get_room_current_status(room_id)
+        
+        if not current_data:
+            raise HTTPException(status_code=404, detail=f"Room {room_id} not found")
+        
+        # Veriyi format'a çevir
+        diagnosis_data = {
+            "room_id": room_id,
+            "timestamp": datetime.now().isoformat(),
+            "occupancy_status": current_data.get("occupancy_status", 0),
+            "hour_of_day": current_data.get("hour_of_day", datetime.now().hour),
+            "total_power": current_data.get("power_consumption", 0),  # Düzeltildi
+            "lighting_watt": current_data.get("lighting_watt", 0),
+            "projector_watt": current_data.get("projector_watt", 0),
+            "plug_load_watt": current_data.get("plug_load_watt", 0),
+            "is_weekend": current_data.get("is_weekend", 0),
+            "is_holiday": current_data.get("is_holiday", 0)
+        }
+        
+        # Hızlı teşhis
+        quick_diagnosis = enhanced_ai.diagnosis_engine.get_quick_diagnosis(diagnosis_data)
+        
+        return {
+            "success": True,
+            "data": {
+                "room_id": room_id,
+                "diagnosis": quick_diagnosis,
+                "timestamp": datetime.now().isoformat()
+            }
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Quick diagnosis error: {str(e)}")
+
+@app.get("/api/v2/ai/model-info")
+async def get_ai_model_info():
+    """
+    AI model bilgileri
+    """
+    try:
+        model_info = enhanced_ai.get_model_info()
+        
+        return {
+            "success": True,
+            "data": model_info
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Model info error: {str(e)}")
+
+@app.post("/api/v2/ai/custom-analysis")
+async def post_custom_analysis(data: Dict[str, Any]):
+    """
+    Özel veri için analiz
+    Frontend'den gelen özel veriyi analiz eder
+    """
+    try:
+        room_id = data.get("room_id", "unknown")
+        
+        # Analiz yap
+        analysis = enhanced_ai.comprehensive_analysis(room_id, data)
+        
+        return {
+            "success": True,
+            "data": analysis
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Custom analysis error: {str(e)}")
+
+@app.get("/api/v2/ai/room-status/{room_id}")
+async def get_room_status_with_ai(room_id: str):
+    """
+    Oda durumu + AI analizi
+    Muhammet'in frontend'i için optimize edilmiş
+    """
+    try:
+        # Mevcut durumu al
+        current_data = data_service.get_room_current_status(room_id)
+        
+        if not current_data:
+            raise HTTPException(status_code=404, detail=f"Room {room_id} not found")
+        
+        # AI analizi yap
+        analysis = enhanced_ai.comprehensive_analysis(room_id, current_data)
+        
+        # Frontend format'ında hazırla
+        response = {
+            "room_id": room_id,
+            "room_name": current_data.get("room_name", room_id),
+            "building": current_data.get("building", "Unknown"),
+            "floor": current_data.get("floor", 1),
+            "status": analysis["status"],
+            "is_wasting_energy": analysis["analysis"]["diagnosis"]["is_wasting"],
+            "is_anomaly": analysis["analysis"]["anomaly"]["is_anomaly"],
+            "urgency_level": analysis["urgency_level"],
+            "current_power": analysis["current_data"]["power_consumption"],
+            "occupancy_status": analysis["current_data"]["occupancy_status"],
+            "detected_devices": analysis["current_data"]["detected_devices"],
+            "instant_loss_tl_per_hour": analysis["analysis"]["financial"]["wasted_cost_per_hour"],
+            "daily_cost_tl": analysis["analysis"]["financial"]["daily_cost"],
+            "carbon_kg_per_hour": analysis["analysis"]["financial"]["wasted_carbon_per_hour"],
+            "diagnostic_message": analysis["analysis"]["diagnosis"].get("primary_issue", "Normal"),
+            "primary_device": analysis["current_data"]["detected_devices"][0] if analysis["current_data"]["detected_devices"] else "None",
+            "recommendations": analysis["recommendations"],
+            "confidence": analysis["confidence"],
+            "timestamp": analysis["timestamp"]
+        }
+        
+        return {
+            "success": True,
+            "data": response
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Room status error: {str(e)}")
+
+@app.get("/api/v2/ai/dashboard-summary")
+async def get_dashboard_summary():
+    """
+    Dashboard özeti
+    Tüm odaların durumu + istatistikler
+    """
+    try:
+        # Toplu analiz yap
+        batch_result = enhanced_ai.batch_analyze_rooms(data_service.get_all_rooms_current_status())
+        
+        # Dashboard verisi hazırla
+        summary = batch_result["summary"]
+        rooms = batch_result["rooms"]
+        
+        # En kritik odalar
+        critical_rooms = [room for room in rooms if room["status"] == "CRITICAL"][:5]
+        
+        # En çok israf yapan odalar
+        wasting_rooms = [room for room in rooms if room["analysis"]["diagnosis"]["is_wasting"]]
+        wasting_rooms.sort(key=lambda x: x["analysis"]["financial"]["wasted_cost_per_hour"], reverse=True)
+        top_wasters = wasting_rooms[:5]
+        
+        # Öneriler
+        all_recommendations = []
+        for room in rooms:
+            all_recommendations.extend(room["recommendations"])
+        
+        dashboard_data = {
+            "summary": {
+                "total_rooms": summary["total_rooms"],
+                "wasting_rooms": summary["wasting_rooms"],
+                "critical_rooms": summary["critical_rooms"],
+                "normal_rooms": summary["total_rooms"] - summary["wasting_rooms"],
+                "total_waste_per_hour": summary["total_waste_cost"],
+                "total_potential_savings": summary["total_potential_savings"],
+                "waste_percentage": (summary["wasting_rooms"] / summary["total_rooms"] * 100) if summary["total_rooms"] > 0 else 0
+            },
+            "critical_rooms": [
+                {
+                    "room_id": room["room_id"],
+                    "status": room["status"],
+                    "issue": room["analysis"]["diagnosis"].get("primary_issue", "Unknown"),
+                    "urgency": room["urgency_level"],
+                    "waste_per_hour": room["analysis"]["financial"]["wasted_cost_per_hour"]
+                }
+                for room in critical_rooms
+            ],
+            "top_wasters": [
+                {
+                    "room_id": room["room_id"],
+                    "waste_per_hour": room["analysis"]["financial"]["wasted_cost_per_hour"],
+                    "devices": room["current_data"]["detected_devices"],
+                    "issue": room["analysis"]["diagnosis"].get("primary_issue", "Unknown")
+                }
+                for room in top_wasters
+            ],
+            "recommendations": all_recommendations[:10],  # İlk 10 öneri
+            "timestamp": datetime.now().isoformat()
+        }
+        
+        return {
+            "success": True,
+            "data": dashboard_data
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dashboard error: {str(e)}")
 
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000, reload=True)

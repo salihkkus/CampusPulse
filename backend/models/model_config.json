@@ -1,0 +1,12 @@
+{
+  "features": [
+    "total_watt",
+    "hour_of_day",
+    "is_class_in_session",
+    "day_of_week",
+    "is_weekend"
+  ],
+  "training_date": "2026-05-02T16:17:05.885121",
+  "total_samples": 56160,
+  "anomalies_detected": 5616
+}

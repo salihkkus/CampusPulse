@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MetricCard from '../components/MetricCard';
@@ -271,3 +272,200 @@ function buildDeviceBreakdown(rooms) {
   }));
 }
 
+=======
+import React from 'react';
+import { useNavigate } from 'react-router-dom';
+import MetricCard from '../components/MetricCard';
+import ThreeDMap from '../components/ThreeDMap';
+import RoomStatusCard from '../components/RoomStatusCard';
+import { useApi } from '../hooks/useApi';
+import { getDashboardSummary, getBatchAnalysis, getFrontendAlerts } from '../services/api';
+import { dashboardAlerts as fallbackAlerts } from '../data/mockData';
+
+export default function DashboardPage() {
+  const navigate = useNavigate();
+  // Canlı veriler - her 30 saniyede bir güncellenir
+  const { data: dashData, loading: dashLoading } = useApi(getDashboardSummary, [], 30_000);
+  const { data: batchData, loading: batchLoading } = useApi(getBatchAnalysis, [], 30_000);
+  const { data: alertsData } = useApi(getFrontendAlerts, [], 30_000);
+
+  // Verileri güvenli şekilde çıkar
+  const summary = dashData?.data?.summary;
+  const rooms = batchData?.data?.rooms || [];
+  const liveAlerts = alertsData?.alerts || [];
+
+  // Metrik değerler
+  const totalWastePerHour = summary?.total_waste_per_hour ?? 0;
+  const dailyCost = totalWastePerHour * 24;
+  const totalRooms = summary?.total_rooms ?? 0;
+  const wastingRooms = summary?.wasting_rooms ?? 0;
+  const criticalRooms = summary?.critical_rooms ?? 0;
+
+  // Odalardan karbon tahmini
+  const totalCarbon = rooms.reduce(
+    (sum, r) => sum + (r?.analysis?.financial?.instant_carbon_per_hour ?? 0),
+    0
+  );
+
+
+  // Uyarılar
+  const alerts =
+    liveAlerts.length > 0
+      ? liveAlerts.map((a) => ({
+        title: a.message || a.title || 'Alert',
+        label: a.room_id,
+        location: a.room_id,
+        severity: a.severity === 'critical' ? 'Critical' : a.severity === 'high' ? 'High' : 'Normal',
+        time: 'Now',
+        icon: a.severity === 'critical' ? 'warning' : a.severity === 'high' ? 'lightbulb' : 'info',
+        tone: a.severity === 'critical' ? 'error' : a.severity === 'high' ? 'amber' : 'blue',
+      }))
+      : [];
+
+  const isLoading = dashLoading || batchLoading;
+
+  return (
+    <>
+      {/* ── Bağlantı Durumu ────────────────────────── */}
+      {!isLoading && summary && (
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700 mb-2">
+          <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+          Sunucuya bağlı — {totalRooms} oda izleniyor
+        </div>
+      )}
+      {!isLoading && !summary && (
+        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-700 mb-2">
+          <span className="material-symbols-outlined text-[16px]">cloud_off</span>
+          Sunucu bağlantısı kurulamadı — örnek veri gösteriliyor
+        </div>
+      )}
+
+      {/* ── Üst Metrik Kartları ─────────────────────────── */}
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+        <MetricCard
+          title="Anlık Kayıp (Saatlik)"
+          value={`₺${totalWastePerHour.toFixed(2)}`}
+          subtext={`${wastingRooms} odada israf var`}
+          icon="trending_down"
+          iconTone="text-error"
+          gradientClass="from-red-50 to-orange-100"
+        />
+        <MetricCard
+          title="Tahmini Günlük Maliyet"
+          value={`₺${dailyCost.toFixed(2)}`}
+          subtext="Mevcut tüketime göre"
+          icon="payments"
+          iconTone="text-orange-500"
+          gradientClass="from-yellow-50 to-orange-100/50"
+        />
+        <MetricCard
+          title="Karbon Ayak İzi (Saatlik)"
+          value={totalCarbon.toFixed(2)}
+          valueSuffix=" kg CO₂"
+          subtext="Kampüs toplam emisyonu"
+          icon="eco"
+          iconTone="text-emerald-500"
+          gradientClass="from-emerald-50 to-green-100"
+        />
+        <MetricCard
+          title="Odalar Özeti"
+          value={`${criticalRooms}`}
+          valueSuffix={` / ${totalRooms}`}
+          subtext="Kritik / Toplam oda"
+          icon="meeting_room"
+          iconTone="text-primary"
+          gradientClass="from-indigo-50 to-violet-100/50"
+        />
+      </section>
+
+      {/* ── Uyarılar ───────────────────────── */}
+      <section className="flex flex-col gap-6">
+        <div className="glass-card flex flex-col p-6">
+          <div className="mb-6 flex items-center justify-between">
+            <h2 className="font-h2 text-h2 text-on-surface">En Son Anomaliler / Uyarılar</h2>
+            <span className="flex items-center gap-1 rounded-full bg-error-container/40 px-3 py-1 text-xs font-medium text-on-error-container">
+              {alerts.length} uyarı
+            </span>
+          </div>
+
+          <div className="flex flex-1 flex-col gap-3">
+            {alerts.length === 0 && (
+              <p className="py-8 text-center text-on-surface-variant">Aktif uyarı yok</p>
+            )}
+            {alerts.map((alert, idx) => (
+              <div
+                key={`${alert.title}-${idx}`}
+                className="group flex cursor-pointer items-center gap-4 rounded-2xl border border-surface-container bg-surface-container-lowest p-4 transition-colors hover:bg-surface-container-low"
+              >
+                <div
+                  className={`flex h-10 w-10 items-center justify-center rounded-full transition-colors ${alert.tone === 'error'
+                      ? 'bg-error-container/30 text-error group-hover:bg-error-container'
+                      : alert.tone === 'amber'
+                        ? 'bg-orange-100 text-orange-600 group-hover:bg-orange-200'
+                        : 'bg-blue-100 text-blue-600 group-hover:bg-blue-200'
+                    }`}
+                >
+                  <span className="material-symbols-outlined">{alert.icon}</span>
+                </div>
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-label-sm font-label-sm text-on-surface">{alert.title}</h3>
+                  <div className="mt-1 flex items-center gap-2">
+                    <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">
+                      {alert.label}
+                    </span>
+                    <p className="flex items-center gap-1 font-caption text-caption text-on-surface-variant">
+                      <span className="material-symbols-outlined text-[14px]">location_on</span>
+                      {alert.location}
+                    </p>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <p className="text-label-sm font-label-sm text-error">{alert.severity}</p>
+                  <p className="font-caption text-caption text-on-surface-variant">{alert.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* ── Oda Durumları Bağlantısı ─────────────────────────── */}
+      <section className="glass-card flex items-center justify-between p-6">
+        <div>
+          <h2 className="font-h2 text-h2 text-on-surface">Oda Durumları (Canlı)</h2>
+          <p className="mt-1 font-caption text-caption text-on-surface-variant">
+            {rooms.length} izlenen oda için detaylı gerçek zamanlı metrikler.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/rooms')}
+          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-label-sm text-label-sm text-on-primary shadow-sm hover:bg-primary/90 transition-all"
+        >
+          Tüm Odaları Gör
+          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+      </section>
+
+      {/* ── 3D Harita ───────────────────────────────────── */}
+      <section className="glass-card flex flex-col p-6">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="font-h2 text-h2 text-on-surface">Canlı 3D Dijital İkiz</h2>
+            <p className="mt-1 font-caption text-caption text-on-surface-variant">
+              Gerçek zamanlı termal ve enerji haritalaması
+            </p>
+          </div>
+          <span className="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+            Yüksek Tüketim
+          </span>
+        </div>
+        <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
+          <ThreeDMap />
+        </div>
+      </section>
+    </>
+  );
+}
+
+>>>>>>> Stashed changes

@@ -111,8 +111,9 @@ class DataService:
             self.generate_mock_data()
     
     def generate_mock_data(self):
-        """Mock veri oluştur (Önceki metod)"""
+        """Mock veri oluşturmayı devredışı bırak"""
         self.rooms_data = []
+<<<<<<< Updated upstream
         room_defs = [
             {"room_id": "ENG101", "room_name": "Derslik 101", "building": "Mühendislik Fakültesi", "floor": 1, "coordinates": {"x": 100, "y": 150, "z": 0}, "devices": ["klima", "projeksiyon", "aydınlatma"]},
             {"room_id": "LAB201", "room_name": "Bilgisayar Lab 201", "building": "Mühendislik Fakültesi", "floor": 2, "coordinates": {"x": 200, "y": 250, "z": 1}, "devices": ["klima", "pc_20_adet", "projeksiyon", "aydınlatma"]},
@@ -126,6 +127,9 @@ class DataService:
         # All timestamps from the first room's time series
         if self.rooms_data:
             self.all_timestamps = [d["timestamp"] for d in self.rooms_data[0]["time_series"]]
+=======
+        print("[INFO] Mock veri oluşturma devredışı bırakıldı.")
+>>>>>>> Stashed changes
     
     def _generate_time_series(self, room_id: str, devices: List[str]) -> List[Dict]:
         time_series = []

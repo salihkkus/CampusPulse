@@ -42,20 +42,6 @@ export default function Sidebar() {
         ))}
       </nav>
 
-      <div className="mt-auto">
-        <div className="flex cursor-pointer items-center gap-3 rounded-2xl border border-surface-variant bg-surface-container-low p-4 transition-colors hover:bg-surface-container-high">
-          <img
-            alt="Yönetici Profili"
-            className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRivF9eUCyh0lL4TQOxe_TtQY4Mqryzr1F2lztSzYgHWk9JJL4CxskWSCxCvHWW0SAzUm6L3f_FrODVDFyiOoVYD9ceSpNjEhN-EPZsvG4jW3qAy2Yb7I_C1fjNKsaPpi77yfsPqQk-vonfyIiXHBt9CHAtcKdZKTS3F7FqtItPDpKCagRA7r70qSl0zD7HJ970-CwbUubwEq-em06MPUPKgFvU6DcR7btjag3WauWfwwjdQXsOUtRxiOEfibgGDcwv3JQkQfUFtlq"
-          />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-on-surface">Yönetici</p>
-            <p className="truncate text-xs text-on-surface-variant">Sistem Yöneticisi</p>
-          </div>
-          <span className="material-symbols-outlined text-outline">more_vert</span>
-        </div>
-      </div>
     </aside>
   );
 }

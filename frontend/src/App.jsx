@@ -2,6 +2,7 @@ import React from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import AppLayout from './layouts/AppLayout';
 import DashboardPage from './pages/DashboardPage';
+import LiveMapPage from './pages/LiveMapPage';
 import PlaceholderPage from './pages/PlaceholderPage';
 import ReportsPage from './pages/ReportsPage';
 
@@ -11,15 +12,7 @@ export default function App() {
       <Routes>
         <Route element={<AppLayout />}>
           <Route path="/" element={<DashboardPage />} />
-          <Route
-            path="/live-map"
-            element={
-              <PlaceholderPage
-                title="3D Live Map"
-                description="Bu sayfa için ayrı bir React component hazır. Burada canlı kampüs haritası ve 3D görünüm eklenecek."
-              />
-            }
-          />
+          <Route path="/live-map" element={<LiveMapPage />} />
           <Route
             path="/reports"
             element={<ReportsPage />}

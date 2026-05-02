@@ -8,6 +8,7 @@ from datetime import datetime
 from data_service import DataService
 from ai_engine import AIEngine
 from frontend_bridge import FrontendBridge
+from chart_data_service import ChartDataService
 
 app = FastAPI(
     title="CampusPulse API",
@@ -24,10 +25,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Data Service, AI Engine ve Frontend Bridge
+# Data Service, AI Engine, Frontend Bridge ve Chart Data Service
 data_service = DataService()
 ai_engine = AIEngine()
 frontend_bridge = FrontendBridge()
+chart_service = ChartDataService()
 
 # Models
 class RoomStatus(BaseModel):
@@ -363,6 +365,122 @@ async def get_frontend_summary():
         "top_critical_rooms": critical_rooms,
         "alert_count": len([room for room in frontend_rooms["rooms"] if room["status"] in ["CRITICAL", "WARNING"]])
     }
+
+# Rapor Grafikleri Endpoint'leri
+@app.get("/api/v1/charts/time-series/{room_id}")
+async def get_time_series_chart(room_id: str, days: int = 7):
+    """
+    Belirli bir odanın zaman serisi grafiği
+    Güç tüketimi, doluluk trendleri
+    """
+    chart_data = chart_service.prepare_time_series_data(room_id, days)
+    return chart_data
+
+@app.get("/api/v1/charts/waste-comparison")
+async def get_waste_comparison_chart():
+    """
+    Odalar arası israf karşılaştırma grafiği
+    Bar chart formatında
+    """
+    chart_data = chart_service.prepare_waste_comparison_chart()
+    return chart_data
+
+@app.get("/api/v1/charts/device-breakdown")
+async def get_device_breakdown_chart(room_id: str = None):
+    """
+    Cihaz bazında enerji tüketim dağılımı
+    Pie chart formatında
+    """
+    chart_data = chart_service.prepare_device_breakdown_chart(room_id)
+    return chart_data
+
+@app.get("/api/v1/charts/financial-trend")
+async def get_financial_trend_chart(days: int = 30):
+    """
+    Finansal trend grafiği
+    Günlük toplam maliyet ve karbon emisyonu
+    """
+    chart_data = chart_service.prepare_financial_trend_chart(days)
+    return chart_data
+
+@app.get("/api/v1/charts/occupancy-efficiency")
+async def get_occupancy_efficiency_chart():
+    """
+    Doluluk vs Verimlilik grafiği
+    Scatter plot formatında
+    """
+    chart_data = chart_service.prepare_occupancy_efficiency_chart()
+    return chart_data
+
+@app.get("/api/v1/charts/dashboard")
+async def get_dashboard_charts():
+    """
+    Dashboard için tüm grafiklerin özeti
+    Tek bir endpoint'den tüm grafik verileri
+    """
+    dashboard_data = chart_service.prepare_dashboard_summary()
+    return dashboard_data
+
+@app.get("/api/v1/reports/energy-audit")
+async def get_energy_audit_report():
+    """
+    Kapsamlı enerji denetim raporu
+    PDF export için veri hazırlığı
+    """
+    rooms_data = data_service.get_all_rooms_current_status()
+    audit_data = {
+        "report_metadata": {
+            "generated_at": datetime.now().isoformat(),
+            "report_type": "Energy Audit Report",
+            "period": "Last 24 Hours",
+            "total_rooms": len(rooms_data)
+        },
+        "executive_summary": {
+            "total_power_consumption": sum(r["current_power"] for r in rooms_data),
+            "total_wasting_rooms": len([r for r in rooms_data if r["occupancy_status"] == 0 and r["current_power"] > 50]),
+            "estimated_daily_loss": 0,
+            "carbon_footprint": 0
+        },
+        "room_details": [],
+        "recommendations": [],
+        "charts": {
+            "waste_comparison": chart_service.prepare_waste_comparison_chart(),
+            "device_breakdown": chart_service.prepare_device_breakdown_chart(),
+            "financial_trend": chart_service.prepare_financial_trend_chart(7)
+        }
+    }
+    
+    # Oda detaylarını ekle
+    for room_data in rooms_data:
+        room_id = room_data["room_id"]
+        room_history = data_service.get_room_history(room_id, 24)
+        ai_analysis = ai_engine.comprehensive_analysis(room_id, room_data, room_history)
+        
+        audit_data["room_details"].append({
+            "room_id": room_id,
+            "room_name": room_data["room_name"],
+            "current_power": room_data["current_power"],
+            "occupancy_status": room_data["occupancy_status"],
+            "is_wasting": ai_analysis.get("is_wasting_energy", False),
+            "waste_percentage": ai_analysis.get("waste_percentage", 0),
+            "instant_loss_tl": ai_analysis.get("instant_loss_tl_per_hour", 0),
+            "detected_devices": ai_analysis.get("detected_devices", []),
+            "recommendation": ai_analysis.get("diagnostic_message", "")
+        })
+        
+        if ai_analysis.get("is_wasting_energy", False):
+            audit_data["executive_summary"]["estimated_daily_loss"] += ai_analysis.get("daily_cost_tl", 0)
+            audit_data["executive_summary"]["carbon_footprint"] += ai_analysis.get("carbon_kg_per_day", 0)
+    
+    # Genel öneriler
+    audit_data["recommendations"] = [
+        "Otomatik klima kontrol sistemi kurulumu önerilir",
+        "Boş odalardaki aydınlatma sensörleri takılmalı",
+        "PC'ler için otomatik uyku modu konfigürasyonu yapılmalı",
+        "Ders programına göre otomatik cihaz kontrolü sağlanmalı"
+    ]
+    
+    return audit_data
 
 def generate_recommendations(analysis: Dict) -> List[str]:
     """AI analizine göre öneriler oluştur"""

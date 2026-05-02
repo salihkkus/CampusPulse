@@ -1,0 +1,140 @@
+{
+  "description": "Eren'in hazırlayacağı veri formatı örneği",
+  "rooms": [
+    {
+      "room_id": "ENG101",
+      "room_name": "Derslik 101",
+      "building": "Mühendislik Fakültesi",
+      "floor": 1,
+      "coordinates": {"x": 100, "y": 150, "z": 0},
+      "devices": ["klima", "projeksiyon", "aydınlatma"],
+      "time_series": [
+        {
+          "timestamp": "2024-05-02T08:00:00Z",
+          "power_consumption": 850.50,
+          "occupancy_status": 1,
+          "temperature": 22.5,
+          "active_devices": ["klima", "projeksiyon", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T09:00:00Z",
+          "power_consumption": 920.30,
+          "occupancy_status": 1,
+          "temperature": 23.1,
+          "active_devices": ["klima", "projeksiyon", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T10:00:00Z",
+          "power_consumption": 880.75,
+          "occupancy_status": 1,
+          "temperature": 22.8,
+          "active_devices": ["klima", "projeksiyon", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T11:00:00Z",
+          "power_consumption": 125.30,
+          "occupancy_status": 0,
+          "temperature": 24.2,
+          "active_devices": ["klima"]
+        },
+        {
+          "timestamp": "2024-05-02T12:00:00Z",
+          "power_consumption": 95.15,
+          "occupancy_status": 0,
+          "temperature": 25.1,
+          "active_devices": ["klima"]
+        }
+      ]
+    },
+    {
+      "room_id": "LAB201",
+      "room_name": "Bilgisayar Lab 201",
+      "building": "Mühendislik Fakültesi",
+      "floor": 2,
+      "coordinates": {"x": 200, "y": 250, "z": 1},
+      "devices": ["klima", "pc_20_adet", "projeksiyon", "aydınlatma"],
+      "time_series": [
+        {
+          "timestamp": "2024-05-02T08:00:00Z",
+          "power_consumption": 1850.75,
+          "occupancy_status": 1,
+          "temperature": 21.8,
+          "active_devices": ["klima", "pc_20_adet", "projeksiyon", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T09:00:00Z",
+          "power_consumption": 1920.50,
+          "occupancy_status": 1,
+          "temperature": 22.2,
+          "active_devices": ["klima", "pc_20_adet", "projeksiyon", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T10:00:00Z",
+          "power_consumption": 1780.30,
+          "occupancy_status": 1,
+          "temperature": 21.9,
+          "active_devices": ["klima", "pc_20_adet", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T11:00:00Z",
+          "power_consumption": 1450.80,
+          "occupancy_status": 0,
+          "temperature": 23.5,
+          "active_devices": ["klima", "pc_20_adet"]
+        },
+        {
+          "timestamp": "2024-05-02T12:00:00Z",
+          "power_consumption": 1380.45,
+          "occupancy_status": 0,
+          "temperature": 24.0,
+          "active_devices": ["klima", "pc_20_adet"]
+        }
+      ]
+    },
+    {
+      "room_id": "OFIS301",
+      "room_name": "Akademisyen Ofisi 301",
+      "building": "Mühendislik Fakültesi",
+      "floor": 3,
+      "coordinates": {"x": 150, "y": 350, "z": 2},
+      "devices": ["klima", "pc", "aydınlatma"],
+      "time_series": [
+        {
+          "timestamp": "2024-05-02T08:00:00Z",
+          "power_consumption": 450.25,
+          "occupancy_status": 1,
+          "temperature": 23.2,
+          "active_devices": ["klima", "pc", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T09:00:00Z",
+          "power_consumption": 480.60,
+          "occupancy_status": 1,
+          "temperature": 23.5,
+          "active_devices": ["klima", "pc", "aydınlatma"]
+        },
+        {
+          "timestamp": "2024-05-02T10:00:00Z",
+          "power_consumption": 85.30,
+          "occupancy_status": 0,
+          "temperature": 25.8,
+          "active_devices": ["klima"]
+        },
+        {
+          "timestamp": "2024-05-02T11:00:00Z",
+          "power_consumption": 75.15,
+          "occupancy_status": 0,
+          "temperature": 26.2,
+          "active_devices": ["klima"]
+        },
+        {
+          "timestamp": "2024-05-02T12:00:00Z",
+          "power_consumption": 0.00,
+          "occupancy_status": 0,
+          "temperature": 27.5,
+          "active_devices": []
+        }
+      ]
+    }
+  ]
+}

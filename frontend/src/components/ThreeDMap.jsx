@@ -209,22 +209,22 @@ function AKMBuilding({ position, name, onClick, isActive, hasCritical }) {
 export default function ThreeDMap({ onBuildingClick, activeBuilding, criticalBuildings = [] }) {
   return (
     <div className="absolute inset-0">
-      <Canvas shadows camera={{ position: [0, 8, 12], fov: 45 }}>
+      <Canvas camera={{ position: [0, 8, 12], fov: 45 }}>
         <Sky sunPosition={[10, 20, 10]} turbidity={0.3} rayleigh={0.5} />
         <Environment preset="city" />
         <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 20, 10]} intensity={1.2} castShadow shadow-mapSize={[2048, 2048]} shadow-camera-left={-15} shadow-camera-right={15} shadow-camera-top={15} shadow-camera-bottom={-15} shadow-bias={-0.0001} />
+        <directionalLight position={[10, 20, 10]} intensity={1.2} />
 
         <EngineeringBuilding position={[-10, 0, -4]} name="Mühendislik 1" onClick={onBuildingClick} isActive={activeBuilding === "Mühendislik 1"} hasCritical={criticalBuildings.includes("Mühendislik 1")} variant={1} />
         <EngineeringBuilding position={[0, 0, 5]} name="Mühendislik 2" onClick={onBuildingClick} isActive={activeBuilding === "Mühendislik 2"} hasCritical={criticalBuildings.includes("Mühendislik 2")} variant={2} />
         <AKMBuilding position={[12, 0, -2]} name="AKM" onClick={onBuildingClick} isActive={activeBuilding === "AKM"} hasCritical={criticalBuildings.includes("AKM")} />
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]} receiveShadow><planeGeometry args={[100, 100]} /><meshStandardMaterial color="#8b9d77" roughness={1} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}><planeGeometry args={[100, 100]} /><meshStandardMaterial color="#8b9d77" roughness={1} /></mesh>
         
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[1, 0.01, 0]} receiveShadow><planeGeometry args={[26, 3]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-10, 0.01, -1.5]} receiveShadow><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 2.5]} receiveShadow><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[10, 0.01, -1]} receiveShadow><planeGeometry args={[3, 5]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[1, 0.01, 0]}><planeGeometry args={[26, 3]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-10, 0.01, -1.5]}><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 2.5]}><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[10, 0.01, -1]}><planeGeometry args={[3, 5]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
 
         <Tree position={[-5, 0, 2]} scale={1.2} />
         <Tree position={[-6, 0, -1]} scale={0.9} />
@@ -238,8 +238,6 @@ export default function ThreeDMap({ onBuildingClick, activeBuilding, criticalBui
         <Tree position={[-2, 0, -4]} scale={1.0} />
         <Tree position={[2, 0, -2]} scale={0.8} />
         <Tree position={[-12, 0, -6]} scale={1.3} />
-
-        <ContactShadows resolution={1024} scale={30} blur={2} opacity={0.5} far={10} color="#1a202c" />
         <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={5} maxDistance={30} />
       </Canvas>
     </div>

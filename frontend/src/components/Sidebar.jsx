@@ -6,9 +6,9 @@ export default function Sidebar() {
   return (
     <aside className="fixed left-0 top-0 z-50 flex h-screen w-72 flex-col gap-8 border-r border-slate-100 bg-white p-6 text-sm font-medium text-indigo-600 shadow-none dark:border-slate-800 dark:bg-slate-950 dark:text-indigo-400">
       <div className="flex items-center gap-4 px-4">
-        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary shadow-sm">
+        <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-cyan-500 to-indigo-500 shadow-md">
           <span className="material-symbols-outlined text-white" style={{ fontVariationSettings: "'FILL' 1" }}>
-            domain
+            energy_savings_leaf
           </span>
         </div>
         <div>

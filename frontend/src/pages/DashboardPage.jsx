@@ -11,6 +11,7 @@ import TimeSelector from '../components/TimeSelector';
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [selectedTime, setSelectedTime] = React.useState(null);
+  const [activeBuilding, setActiveBuilding] = React.useState(null);
 
   // Canlı veriler - seçilen zamana göre veya her 30 saniyede bir güncellenir
   const { data: dashData, loading: dashLoading } = useApi(() => getFrontendSummary(selectedTime), [selectedTime], 30_000);
@@ -30,6 +31,21 @@ export default function DashboardPage() {
   const criticalRoomsCount = summary?.critical_rooms ?? 0;
   const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL').map(r => r.building))];
   const totalCarbon = financial?.total_carbon_kg_per_hour ?? 0;
+
+  const handleBuildingClick = (buildingName) => {
+    setActiveBuilding(buildingName === activeBuilding ? null : buildingName);
+  };
+
+  const displayedRooms = rooms.filter(room => {
+    if (activeBuilding === "Mühendislik 1") return room.room_id.startsWith("M1_");
+    if (activeBuilding === "Mühendislik 2") return room.room_id.startsWith("M2_");
+    if (activeBuilding === "AKM") return room.room_id.startsWith("AKM_");
+    return false;
+  }).sort((a, b) => {
+    if (a.status === 'CRITICAL' && b.status !== 'CRITICAL') return -1;
+    if (b.status === 'CRITICAL' && a.status !== 'CRITICAL') return 1;
+    return 0;
+  });
 
   // Uyarılar
   const alerts =
@@ -179,22 +195,64 @@ export default function DashboardPage() {
       </section>
 
       {/* ── 3D Harita ───────────────────────────────────── */}
-      <section className="glass-card flex flex-col p-6">
-        <div className="mb-6 flex items-center justify-between">
-          <div>
-            <h2 className="font-h2 text-h2 text-on-surface">Canlı 3D Dijital İkiz</h2>
-            <p className="mt-1 font-caption text-caption text-on-surface-variant">
-              Gerçek zamanlı termal ve enerji haritalaması
-            </p>
+      <section className="flex flex-col gap-6 lg:flex-row h-full">
+        <div className={`glass-card flex flex-col p-6 transition-all duration-500 ease-in-out ${activeBuilding ? 'lg:w-2/3' : 'w-full'}`}>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h2 className="font-h2 text-h2 text-on-surface">Canlı 3D Dijital İkiz</h2>
+              <p className="mt-1 font-caption text-caption text-on-surface-variant">
+                Gerçek zamanlı termal ve enerji haritalaması
+              </p>
+            </div>
+            <span className="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+              Yüksek Tüketim
+            </span>
           </div>
-          <span className="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            Yüksek Tüketim
-          </span>
+          <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
+            <ThreeDMap 
+              criticalBuildings={criticalBuildings} 
+              onBuildingClick={handleBuildingClick}
+              activeBuilding={activeBuilding}
+            />
+          </div>
         </div>
-        <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
-          <ThreeDMap criticalBuildings={criticalBuildings} />
-        </div>
+
+        {/* Side Panel for Selected Building */}
+        {activeBuilding && (
+          <div className="flex flex-col gap-4 lg:w-1/3 max-h-[600px]">
+            <div className="glass-card p-6 h-full flex flex-col">
+              <div className="flex items-center justify-between mb-4 border-b border-surface-variant pb-4">
+                <h2 className="font-h2 text-h2 text-on-surface">{activeBuilding} Odaları</h2>
+                <button 
+                  onClick={() => setActiveBuilding(null)}
+                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-variant transition-colors text-on-surface"
+                >
+                  <span className="material-symbols-outlined text-[20px]">close</span>
+                </button>
+              </div>
+              
+              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+                {dashLoading || roomsLoading ? (
+                  <div className="flex justify-center p-8">
+                    <span className="material-symbols-outlined animate-spin text-primary text-4xl">autorenew</span>
+                  </div>
+                ) : displayedRooms.length > 0 ? (
+                  <div className="flex flex-col gap-4 pb-4">
+                    {displayedRooms.map(room => (
+                      <RoomStatusCard key={room.room_id} room={room} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="flex flex-col items-center justify-center p-8 text-center text-on-surface-variant h-full">
+                    <span className="material-symbols-outlined text-[48px] mb-4 opacity-50">meeting_room</span>
+                    <p className="font-medium">Bu binaya ait canlı veri bulunamadı.</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
       </section>
     </div>
   );

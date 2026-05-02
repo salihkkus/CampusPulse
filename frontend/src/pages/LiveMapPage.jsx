@@ -19,6 +19,10 @@ export default function LiveMapPage() {
     if (activeBuilding === "Mühendislik 2") return room.room_id.startsWith("M2_");
     if (activeBuilding === "AKM") return room.room_id.startsWith("AKM_");
     return false;
+  }).sort((a, b) => {
+    if (a.status === 'CRITICAL' && b.status !== 'CRITICAL') return -1;
+    if (b.status === 'CRITICAL' && a.status !== 'CRITICAL') return 1;
+    return 0;
   });
 
   const criticalBuildings = [];

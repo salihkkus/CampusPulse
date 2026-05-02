@@ -8,7 +8,6 @@ from routes.financial_routes import router as financial_router
 from routes.frontend_routes import router as frontend_router
 from routes.charts_routes import router as charts_router
 from routes.reports_routes import router as reports_router
-from routes.reports_routes import router as reports_router
 
 app = FastAPI(
     title="CampusPulse API",

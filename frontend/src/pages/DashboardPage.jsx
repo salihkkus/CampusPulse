@@ -5,33 +5,32 @@ import DeviceCostPieChart from '../components/charts/DeviceCostPieChart';
 import ThreeDMap from '../components/ThreeDMap';
 import RoomStatusCard from '../components/RoomStatusCard';
 import { useApi } from '../hooks/useApi';
-import { getDashboardSummary, getBatchAnalysis, getFrontendAlerts } from '../services/api';
+import { getFrontendSummary, getFrontendRooms, getFrontendAlerts } from '../services/api';
 import { getDeviceCostBreakdownChart, dashboardAlerts as fallbackAlerts } from '../data/mockData';
+import TimeSelector from '../components/TimeSelector';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  // Canlı veriler - her 30 saniyede bir güncellenir
-  const { data: dashData, loading: dashLoading } = useApi(getDashboardSummary, [], 30_000);
-  const { data: batchData, loading: batchLoading } = useApi(getBatchAnalysis, [], 30_000);
-  const { data: alertsData } = useApi(getFrontendAlerts, [], 30_000);
+  const [selectedTime, setSelectedTime] = React.useState(null);
+
+  // Canlı veriler - seçilen zamana göre veya her 30 saniyede bir güncellenir
+  const { data: dashData, loading: dashLoading } = useApi(() => getFrontendSummary(selectedTime), [selectedTime], 30_000);
+  const { data: roomsData, loading: roomsLoading } = useApi(() => getFrontendRooms(selectedTime), [selectedTime], 30_000);
+  const { data: alertsData } = useApi(() => getFrontendAlerts(selectedTime), [selectedTime], 30_000);
 
   // Verileri güvenli şekilde çıkar
-  const summary = dashData?.data?.summary;
-  const rooms = batchData?.data?.rooms || [];
+  const summary = dashData?.overview;
+  const financial = dashData?.financial_impact;
+  const rooms = roomsData?.rooms || [];
   const liveAlerts = alertsData?.alerts || [];
 
   // Metrik değerler
-  const totalWastePerHour = summary?.total_waste_per_hour ?? 0;
-  const dailyCost = totalWastePerHour * 24;
+  const totalWastePerHour = financial?.instant_loss_per_hour ?? 0;
+  const projectedDailyCost = financial?.projected_daily_loss ?? 0;
   const totalRooms = summary?.total_rooms ?? 0;
-  const wastingRooms = summary?.wasting_rooms ?? 0;
-  const criticalRooms = summary?.critical_rooms ?? 0;
-
-  // Odalardan karbon tahmini
-  const totalCarbon = rooms.reduce(
-    (sum, r) => sum + (r?.analysis?.financial?.instant_carbon_per_hour ?? 0),
-    0
-  );
+  const criticalRoomsCount = summary?.critical_rooms ?? 0;
+  const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL').map(r => r.building))];
+  const totalCarbon = financial?.total_carbon_kg_per_hour ?? 0;
 
   // Cihaz maliyet dağılımı
   const deviceBreakdown = buildDeviceBreakdown(rooms);
@@ -52,21 +51,29 @@ export default function DashboardPage() {
         }))
       : fallbackAlerts;
 
-  const isLoading = dashLoading || batchLoading;
+  const isLoading = dashLoading || roomsLoading;
 
   return (
-    <>
+    <div className="flex flex-col gap-8">
+      {/* ── Üst Başlık ────────────────────── */}
+      <section className="text-center">
+        <h1 className="font-h1 text-h1 text-on-surface">Kampüs Enerji Analizi</h1>
+        <p className="text-on-surface-variant font-body-md">
+          Gerçek zamanlı kampüs enerji tüketimi ve israf analizi.
+        </p>
+      </section>
+
       {/* ── Bağlantı Durumu ────────────────────────── */}
       {!isLoading && summary && (
-        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700 mb-2">
+        <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Sunucuya bağlı — {totalRooms} oda izleniyor
+          Veri kaynağı aktif — {totalRooms} oda izleniyor
         </div>
       )}
       {!isLoading && !summary && (
-        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-700 mb-2">
+        <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-700">
           <span className="material-symbols-outlined text-[16px]">cloud_off</span>
-          Sunucu bağlantısı kurulamadı — örnek veri gösteriliyor
+          Veri yüklenemedi — örnek veri gösteriliyor
         </div>
       )}
 
@@ -75,14 +82,14 @@ export default function DashboardPage() {
         <MetricCard
           title="Anlık Kayıp (Saatlik)"
           value={`₺${totalWastePerHour.toFixed(2)}`}
-          subtext={`${wastingRooms} odada israf var`}
+          subtext="Seçilen saatteki toplam israf"
           icon="trending_down"
           iconTone="text-error"
           gradientClass="from-red-50 to-orange-100"
         />
         <MetricCard
           title="Tahmini Günlük Maliyet"
-          value={`₺${dailyCost.toFixed(2)}`}
+          value={`₺${projectedDailyCost.toFixed(2)}`}
           subtext="Mevcut tüketime göre"
           icon="payments"
           iconTone="text-orange-500"
@@ -99,7 +106,7 @@ export default function DashboardPage() {
         />
         <MetricCard
           title="Odalar Özeti"
-          value={`${criticalRooms}`}
+          value={`${criticalRoomsCount}`}
           valueSuffix={` / ${totalRooms}`}
           subtext="Kritik / Toplam oda"
           icon="meeting_room"
@@ -205,10 +212,10 @@ export default function DashboardPage() {
           </span>
         </div>
         <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
-          <ThreeDMap />
+          <ThreeDMap criticalBuildings={criticalBuildings} />
         </div>
       </section>
-    </>
+    </div>
   );
 }
 

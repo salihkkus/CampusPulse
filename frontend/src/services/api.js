@@ -34,13 +34,31 @@ export async function getModelInfo() {
 }
 
 // ─── Frontend Optimized Rooms ────────────────────────────────
-export async function getFrontendRooms() {
-  return fetchJSON(`${BASE_URL}/v1/frontend/rooms`);
+export async function getFrontendRooms(timestamp = null) {
+  const url = timestamp ? `${BASE_URL}/v1/frontend/rooms?timestamp=${timestamp}` : `${BASE_URL}/v1/frontend/rooms`;
+  return fetchJSON(url);
 }
 
 // ─── Frontend Alerts ─────────────────────────────────────────
-export async function getFrontendAlerts() {
-  return fetchJSON(`${BASE_URL}/v1/frontend/alerts`);
+export async function getFrontendAlerts(timestamp = null) {
+  const url = timestamp ? `${BASE_URL}/v1/frontend/alerts?timestamp=${timestamp}` : `${BASE_URL}/v1/frontend/alerts`;
+  return fetchJSON(url);
+}
+
+// ─── Frontend Summary ─────────────────────────────────────────
+export async function getFrontendSummary(timestamp = null) {
+  const url = timestamp ? `${BASE_URL}/v1/frontend/summary?timestamp=${timestamp}` : `${BASE_URL}/v1/frontend/summary`;
+  return fetchJSON(url);
+}
+
+// ─── Available Timestamps ────────────────────────────────────
+export async function getAvailableTimestamps() {
+  return fetchJSON(`${BASE_URL}/v1/frontend/timestamps`);
+}
+
+// ─── Range Report ───────────────────────────────────────────
+export async function getRangeReport(startDate, endDate, startHour = 0, endHour = 23) {
+  return fetchJSON(`${BASE_URL}/v1/frontend/range-report?start_date=${startDate}&end_date=${endDate}&start_hour=${startHour}&end_hour=${endHour}`);
 }
 
 // ─── Charts ──────────────────────────────────────────────────
@@ -49,8 +67,10 @@ export async function getDashboardCharts() {
 }
 
 // ─── Room History ────────────────────────────────────────────
-export async function getRoomHistory(roomId, hours = 24) {
-  return fetchJSON(`${BASE_URL}/v1/rooms/${roomId}/history?hours=${hours}`);
+export async function getRoomHistory(roomId, hours = 24, timestamp = null) {
+  let url = `${BASE_URL}/v1/rooms/${roomId}/history?hours=${hours}`;
+  if (timestamp) url += `&timestamp=${timestamp}`;
+  return fetchJSON(url);
 }
 
 // ─── Financial Summary ──────────────────────────────────────

@@ -1,6 +1,8 @@
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useApi } from '../hooks/useApi';
-import { getEnergyAuditReport, getBatchAnalysis } from '../services/api';
+import { getFrontendRooms, getRangeReport } from '../services/api';
+import TimeSelector from '../components/TimeSelector';
+import DateRangeSelector from '../components/DateRangeSelector';
 
 function getStatusClass(status) {
   if (status === 'CRITICAL') return 'bg-error-container text-on-error-container';
@@ -10,79 +12,152 @@ function getStatusClass(status) {
 }
 
 export default function ReportsPage() {
-  const { data: batchData, loading } = useApi(getBatchAnalysis, [], 30_000);
-  const rooms = batchData?.data?.rooms || [];
-  const summary = batchData?.data?.summary || {};
+  const [selectedTime, setSelectedTime] = useState(null);
+  const [isRangeMode, setIsRangeMode] = useState(false);
+  const [rangeParams, setRangeParams] = useState({
+    startDate: null,
+    endDate: null,
+    startHour: 0,
+    endHour: 23
+  });
+  
+  const selectedDate = selectedTime ? new Date(selectedTime).toISOString().split('T')[0] : null;
+
+  // Single timestamp data
+  const { data: batchData, loading: batchLoading } = useApi(
+    () => !isRangeMode ? getFrontendRooms(selectedTime) : Promise.resolve(null), 
+    [selectedTime, isRangeMode], 
+    30_000
+  );
+
+  // Range report data
+  const { data: rangeData, loading: rangeLoading } = useApi(
+    () => (isRangeMode && rangeParams.startDate && rangeParams.endDate) 
+      ? getRangeReport(rangeParams.startDate, rangeParams.endDate, rangeParams.startHour, rangeParams.endHour) 
+      : Promise.resolve(null),
+    [isRangeMode, rangeParams]
+  );
+
+  const loading = batchLoading || rangeLoading;
+  
+  const handleRangeChange = useCallback((newParams) => {
+    setRangeParams(newParams);
+  }, []);
+
+  // Normalize data for UI
+  const rooms = isRangeMode ? (rangeData?.rooms || []) : (batchData?.rooms || []);
+  const summary = isRangeMode ? (rangeData?.summary || {}) : (batchData?.summary || {});
 
   // Build carbon data per room
   const carbonData = rooms.map((r) => ({
     label: r.room_id,
-    value: r?.analysis?.financial?.daily_carbon ?? 0,
+    value: isRangeMode ? (r.total_carbon_kg ?? 0) : (r.carbon_kg_per_hour ?? 0),
   }));
 
-  const maxCarbon = Math.max(...carbonData.map((d) => d.value), 1);
+  const maxCarbon = Math.max(...carbonData.map((d) => d.value), 0.1);
 
-  // Build anomaly log from rooms
-  const anomalies = rooms
+  // Build anomaly log from rooms (only for single time mode as range is aggregate)
+  const anomalies = !isRangeMode ? rooms
     .filter((r) => r.status !== 'NORMAL' && r.status !== 'ACTIVE')
     .map((r) => ({
       dateTime: r.timestamp,
       roomId: r.room_id,
-      device: r.current_data?.detected_devices?.join(', ') || '-',
-      wastedPowerKw: ((r.current_data?.power_consumption ?? 0) / 1000).toFixed(2),
-      financialLossTl: (r.analysis?.financial?.daily_cost ?? 0).toFixed(2),
+      device: r.detected_device || '-',
+      wastedPowerKw: ((r.current_power ?? 0) / 1000).toFixed(2),
+      financialLossTl: (r.instant_loss_tl ?? 0).toFixed(2),
       status: r.status,
-    }));
+    })) : [];
 
   // Summary stats
-  const totalWasteCostHour = summary.total_waste_cost ?? 0;
-  const totalSavings = summary.total_potential_savings ?? 0;
+  const totalWasteCost = isRangeMode ? (summary.total_waste_tl ?? 0) : (summary.total_waste_tl ?? 0);
+  const totalPower = isRangeMode ? (summary.total_power_kwh ?? 0) : (rooms.reduce((s, r) => s + (r.current_power ?? 0), 0) / 1000);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-lg">
       {/* Header */}
-      <section className="mb-2 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
+      <section className="text-center">
         <h1 className="font-h1 text-h1 text-on-surface">Enerji &amp; Finansal Raporlar</h1>
+        <p className="text-on-surface-variant font-body-md">
+          {isRangeMode 
+            ? `${rangeParams.startDate} - ${rangeParams.endDate} tarihleri arası kapsamlı analiz.` 
+            : (selectedTime ? "Seçilen zaman dilimine ait detaylı rapor." : "Kampüs genel enerji ve finansal verimlilik raporları.")}
+        </p>
+      </section>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => alert('PDF rapor oluşturma başlatıldı.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
-            <span className="material-symbols-outlined text-[18px]">file_copy</span>
-            PDF Dışa Aktar
-          </button>
-          <button onClick={() => alert('CSV indiriliyor...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
-            <span className="material-symbols-outlined text-[18px]">download</span>
-            CSV İndir
-          </button>
+      {/* Kontrol Paneli */}
+      <section className="glass-card flex flex-col gap-8 bg-white/50 p-8 backdrop-blur-sm">
+        <div className="flex flex-col items-center justify-between gap-6 border-b border-surface-variant/30 pb-6 md:flex-row">
+          <div className="flex items-center gap-4">
+             <div className="flex items-center rounded-2xl bg-surface-container-low p-1.5 shadow-inner">
+               <button 
+                  onClick={() => setIsRangeMode(false)}
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${!isRangeMode ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:bg-surface-variant/50'}`}
+               >
+                  Tekil Saat
+               </button>
+               <button 
+                  onClick={() => setIsRangeMode(true)}
+                  className={`rounded-xl px-4 py-2 text-sm font-bold transition-all ${isRangeMode ? 'bg-primary text-white shadow-md' : 'text-on-surface-variant hover:bg-surface-variant/50'}`}
+               >
+                  Tarih Aralığı
+               </button>
+             </div>
+          </div>
+          
+          <div className="flex items-center gap-2 text-on-surface-variant">
+             <span className="material-symbols-outlined text-primary/60">info</span>
+             <span className="text-xs font-medium">
+               {isRangeMode ? "Seçilen iki tarih arasındaki tüm veriler toplanarak analiz edilir." : "Seçilen ana ait anlık durum raporu oluşturulur."}
+             </span>
+          </div>
         </div>
+        
+        {isRangeMode ? (
+          <DateRangeSelector onRangeChange={handleRangeChange} />
+        ) : (
+          <TimeSelector onTimeChange={setSelectedTime} selectedTime={selectedTime} />
+        )}
+      </section>
+
+      {/* Action Bar */}
+      <section className="flex justify-end gap-3">
+        <button onClick={() => alert('PDF rapor oluşturma başlatıldı.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px">
+          <span className="material-symbols-outlined text-[18px]">file_copy</span>
+          PDF
+        </button>
+        <button onClick={() => alert('CSV indiriliyor...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px">
+          <span className="material-symbols-outlined text-[18px]">download</span>
+          CSV
+        </button>
       </section>
 
       {/* Live Summary Cards */}
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          label="Toplam Oda"
-          value={summary.total_rooms ?? 0}
+          label={isRangeMode ? "Analiz Edilen Oda" : "Toplam Oda"}
+          value={isRangeMode ? (summary.analyzed_rooms ?? 0) : (summary.total_rooms ?? 0)}
           icon="meeting_room"
           color="text-indigo-600"
           bg="bg-indigo-50"
         />
         <SummaryCard
-          label="İsraf Yapan Oda"
-          value={summary.wasting_rooms ?? 0}
-          icon="warning"
+          label={isRangeMode ? "Toplam Tüketim" : "Anlık Tüketim"}
+          value={`${totalPower.toFixed(1)} kWh`}
+          icon="bolt"
+          color="text-amber-600"
+          bg="bg-amber-50"
+        />
+        <SummaryCard
+          label={isRangeMode ? "Aralık İsrafı" : "Saatlik İsraf"}
+          value={`₺${totalWasteCost.toFixed(2)}`}
+          icon="payments"
           color="text-red-600"
           bg="bg-red-50"
         />
         <SummaryCard
-          label="Saatlik İsraf"
-          value={`₺${totalWasteCostHour.toFixed(2)}`}
-          icon="payments"
-          color="text-orange-600"
-          bg="bg-orange-50"
-        />
-        <SummaryCard
-          label="Aylık Tasarruf"
-          value={`₺${totalSavings.toFixed(0)}`}
-          icon="savings"
+          label={isRangeMode ? "Aralık Emisyonu" : "Saatlik Emisyon"}
+          value={`${(isRangeMode ? (summary.total_carbon_kg ?? 0) : (summary.total_carbon_kg ?? 0)).toFixed(1)} kg`}
+          icon="eco"
           color="text-emerald-600"
           bg="bg-emerald-50"
         />
@@ -93,7 +168,7 @@ export default function ReportsPage() {
         {/* Carbon per room */}
         <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı Günlük Karbon (kg CO₂)</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı {isRangeMode ? "Toplam" : "Günlük"} Karbon (kg CO₂)</h2>
             <span className="material-symbols-outlined text-outline">more_horiz</span>
           </div>
 
@@ -118,23 +193,22 @@ export default function ReportsPage() {
                 );
               })}
             <div className="absolute bottom-6 left-0 w-full border-b border-surface-variant" />
-            <div className="absolute bottom-[calc(6px+25%)] left-0 w-full border-b border-dashed border-surface-variant" />
-            <div className="absolute bottom-[calc(6px+50%)] left-0 w-full border-b border-dashed border-surface-variant" />
-            <div className="absolute bottom-[calc(6px+75%)] left-0 w-full border-b border-dashed border-surface-variant" />
           </div>
         </article>
 
         {/* Wasted Cost per room */}
         <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı Saatlik İsraf Maliyeti (₺)</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">
+              {isRangeMode ? "Aralık Boyunca Oda Bazlı İsraf (₺)" : "Oda Bazlı Saatlik İsraf Maliyeti (₺)"}
+            </h2>
             <span className="material-symbols-outlined text-outline">more_horiz</span>
           </div>
-
+          
           <div className="relative flex h-[250px] w-full items-end justify-between gap-2 px-2 pb-6">
-            {rooms.map((room) => {
-              const cost = room?.analysis?.financial?.wasted_cost_per_hour ?? 0;
-              const maxCost = Math.max(...rooms.map((r) => r?.analysis?.financial?.wasted_cost_per_hour ?? 0), 1);
+            {!loading && rooms.map((room) => {
+              const cost = isRangeMode ? (room.total_waste_tl ?? 0) : (room.instant_loss_tl ?? 0);
+              const maxCost = Math.max(...rooms.map((r) => isRangeMode ? (r.total_waste_tl ?? 0) : (r.instant_loss_tl ?? 0)), 0.1);
               const height = `${Math.round((cost / maxCost) * 100)}%`;
               return (
                 <div key={room.room_id} className="flex w-full flex-col items-center gap-2">

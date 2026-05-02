@@ -11,9 +11,9 @@ class ChartDataService:
     Frontend'de Chart.js, Recharts gibi kütüphanelerle uyumlu veri formatları
     """
     
-    def __init__(self):
-        self.data_service = DataService()
-        self.ai_engine = AIEngine()
+    def __init__(self, data_service=None, ai_engine=None):
+        self.data_service = data_service if data_service else DataService()
+        self.ai_engine = ai_engine if ai_engine else AIEngine()
     
     def prepare_time_series_data(self, room_id: str, days: int = 7) -> Dict:
         """

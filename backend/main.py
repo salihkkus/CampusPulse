@@ -8,12 +8,7 @@ from routes.financial_routes import router as financial_router
 from routes.frontend_routes import router as frontend_router
 from routes.charts_routes import router as charts_router
 from routes.reports_routes import router as reports_router
-from routes.data_routes import router as data_router
-
-from database import engine, Base
-
-# Create tables in SQLite
-Base.metadata.create_all(bind=engine)
+from routes.reports_routes import router as reports_router
 
 app = FastAPI(
     title="CampusPulse API",
@@ -41,7 +36,6 @@ app.include_router(financial_router)
 app.include_router(frontend_router)
 app.include_router(charts_router)
 app.include_router(reports_router)
-app.include_router(data_router)
 
 if __name__ == "__main__":
     uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)

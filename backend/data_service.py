@@ -9,8 +9,15 @@ class DataService:
     Eren'in hazırladığı CSV veri dosyasını okuyan ve işleyen servis
     """
     
-    def __init__(self, csv_file: str = "../kampus_1_aylik_enerji.csv"):
-        self.csv_file = csv_file
+    def __init__(self, csv_file: str = None):
+        if csv_file is None:
+            # Determine absolute path to CSV file in the root directory
+            base_dir = os.path.dirname(os.path.abspath(__file__))
+            root_dir = os.path.dirname(base_dir)
+            self.csv_file = os.path.join(root_dir, "kampus_1_aylik_enerji.csv")
+        else:
+            self.csv_file = csv_file
+            
         self.rooms_data = []
         self.load_csv_data()
     
@@ -18,7 +25,8 @@ class DataService:
         """CSV veri dosyasını pandas ile yükle"""
         try:
             if not os.path.exists(self.csv_file):
-                print(f"[WARN] Veri dosyasi bulunamadi: {self.csv_file}")
+                print(f"[ERROR] Veri dosyasi bulunamadi: {self.csv_file}")
+                print(f"[INFO] Mevcut dizin: {os.getcwd()}")
                 self.generate_mock_data()
                 return
                 

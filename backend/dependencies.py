@@ -8,7 +8,7 @@ from enhanced_ai_engine import EnhancedAIEngine
 data_service = DataService()
 ai_engine = AIEngine()
 frontend_bridge = FrontendBridge()
-chart_service = ChartDataService()
+chart_service = ChartDataService(data_service=data_service, ai_engine=ai_engine)
 enhanced_ai = EnhancedAIEngine()
 
 def get_data_service():

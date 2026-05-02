@@ -14,10 +14,17 @@ export default function LiveMapPage() {
     setActiveBuilding(buildingName === activeBuilding ? null : buildingName);
   };
 
-  const displayedRooms = activeBuilding?.includes("Mühendislik") ? rooms : [];
+  const displayedRooms = rooms.filter(room => {
+    if (activeBuilding === "Mühendislik 1") return room.room_id.startsWith("M1_");
+    if (activeBuilding === "Mühendislik 2") return room.room_id.startsWith("M2_");
+    if (activeBuilding === "AKM") return room.room_id.startsWith("AKM_");
+    return false;
+  });
 
-  const isEngineeringCritical = rooms.some(r => r.status === 'CRITICAL');
-  const criticalBuildings = isEngineeringCritical ? ["Mühendislik 1"] : [];
+  const criticalBuildings = [];
+  if (rooms.some(r => r.status === 'CRITICAL' && r.room_id.startsWith("M1_"))) criticalBuildings.push("Mühendislik 1");
+  if (rooms.some(r => r.status === 'CRITICAL' && r.room_id.startsWith("M2_"))) criticalBuildings.push("Mühendislik 2");
+  if (rooms.some(r => r.status === 'CRITICAL' && r.room_id.startsWith("AKM_"))) criticalBuildings.push("AKM");
 
   return (
     <div className="mx-auto flex h-full max-w-7xl flex-col gap-lg">
@@ -82,7 +89,7 @@ export default function LiveMapPage() {
                   <div className="flex flex-col items-center justify-center p-8 text-center text-on-surface-variant h-full">
                     <span className="material-symbols-outlined text-[48px] mb-4 opacity-50">meeting_room</span>
                     <p className="font-medium">Bu binaya ait canlı veri bulunamadı.</p>
-                    <p className="text-sm opacity-75 mt-2">Şu anki izleme sensörleri Mühendislik binalarında aktiftir.</p>
+                    <p className="text-sm opacity-75 mt-2">Şu anki izleme sensörleri tüm kampüs binalarında aktiftir.</p>
                   </div>
                 )}
               </div>

@@ -18,14 +18,14 @@ export default function RoomsPage() {
             className="mb-2 flex items-center gap-1 text-sm font-medium text-primary hover:underline"
           >
             <span className="material-symbols-outlined text-[16px]">arrow_back</span>
-            Back to Dashboard
+            Gösterge Paneline Dön
           </button>
-          <h1 className="font-h1 text-h1 text-on-surface">Room Status (Live)</h1>
-          <p className="font-body-md text-on-surface-variant">Live energy tracking for all monitored rooms.</p>
+          <h1 className="font-h1 text-h1 text-on-surface">Oda Durumları (Canlı)</h1>
+          <p className="font-body-md text-on-surface-variant">Tüm izlenen odalar için canlı enerji takibi.</p>
         </div>
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700 shadow-sm">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          {rooms.length} rooms monitored
+          {rooms.length} oda izleniyor
         </div>
       </header>
 
@@ -33,7 +33,7 @@ export default function RoomsPage() {
         <div className="flex h-64 items-center justify-center rounded-2xl border border-surface-container bg-surface-container-lowest">
           <div className="flex flex-col items-center gap-2">
             <span className="material-symbols-outlined animate-spin text-4xl text-primary">autorenew</span>
-            <p className="text-on-surface-variant">Loading room statuses...</p>
+            <p className="text-on-surface-variant">Oda durumları yükleniyor...</p>
           </div>
         </div>
       ) : (

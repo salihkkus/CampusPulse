@@ -15,7 +15,7 @@ export default function Sidebar() {
           <h1 className="bg-gradient-to-r from-cyan-500 to-indigo-500 bg-clip-text text-2xl font-black tracking-tight text-transparent">
             CampusPulse
           </h1>
-          <p className="text-xs font-medium text-slate-500">Admin Console</p>
+          <p className="text-xs font-medium text-slate-500">Yönetici Paneli</p>
         </div>
       </div>
 
@@ -45,13 +45,13 @@ export default function Sidebar() {
       <div className="mt-auto">
         <div className="flex cursor-pointer items-center gap-3 rounded-2xl border border-surface-variant bg-surface-container-low p-4 transition-colors hover:bg-surface-container-high">
           <img
-            alt="Admin User Profile"
+            alt="Yönetici Profili"
             className="h-10 w-10 rounded-full border-2 border-white shadow-sm"
             src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRivF9eUCyh0lL4TQOxe_TtQY4Mqryzr1F2lztSzYgHWk9JJL4CxskWSCxCvHWW0SAzUm6L3f_FrODVDFyiOoVYD9ceSpNjEhN-EPZsvG4jW3qAy2Yb7I_C1fjNKsaPpi77yfsPqQk-vonfyIiXHBt9CHAtcKdZKTS3F7FqtItPDpKCagRA7r70qSl0zD7HJ970-CwbUubwEq-em06MPUPKgFvU6DcR7btjag3WauWfwwjdQXsOUtRxiOEfibgGDcwv3JQkQfUFtlq"
           />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold text-on-surface">Admin User</p>
-            <p className="truncate text-xs text-on-surface-variant">System Manager</p>
+            <p className="truncate text-sm font-semibold text-on-surface">Yönetici</p>
+            <p className="truncate text-xs text-on-surface-variant">Sistem Yöneticisi</p>
           </div>
           <span className="material-symbols-outlined text-outline">more_vert</span>
         </div>

@@ -42,16 +42,16 @@ export default function ReportsPage() {
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-lg">
       {/* Header */}
       <section className="mb-2 flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-center">
-        <h1 className="font-h1 text-h1 text-on-surface">Energy &amp; Financial Reports</h1>
+        <h1 className="font-h1 text-h1 text-on-surface">Enerji &amp; Finansal Raporlar</h1>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button onClick={() => alert('PDF report generation started.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
+          <button onClick={() => alert('PDF rapor oluşturma başlatıldı.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
             <span className="material-symbols-outlined text-[18px]">file_copy</span>
-            Export PDF
+            PDF Dışa Aktar
           </button>
-          <button onClick={() => alert('Downloading CSV...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
+          <button onClick={() => alert('CSV indiriliyor...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
             <span className="material-symbols-outlined text-[18px]">download</span>
-            Download CSV
+            CSV İndir
           </button>
         </div>
       </section>
@@ -59,28 +59,28 @@ export default function ReportsPage() {
       {/* Live Summary Cards */}
       <section className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-4">
         <SummaryCard
-          label="Total Rooms"
+          label="Toplam Oda"
           value={summary.total_rooms ?? 0}
           icon="meeting_room"
           color="text-indigo-600"
           bg="bg-indigo-50"
         />
         <SummaryCard
-          label="Wasting Rooms"
+          label="İsraf Yapan Oda"
           value={summary.wasting_rooms ?? 0}
           icon="warning"
           color="text-red-600"
           bg="bg-red-50"
         />
         <SummaryCard
-          label="Hourly Waste"
+          label="Saatlik İsraf"
           value={`₺${totalWasteCostHour.toFixed(2)}`}
           icon="payments"
           color="text-orange-600"
           bg="bg-orange-50"
         />
         <SummaryCard
-          label="Monthly Savings"
+          label="Aylık Tasarruf"
           value={`₺${totalSavings.toFixed(0)}`}
           icon="savings"
           color="text-emerald-600"
@@ -93,14 +93,14 @@ export default function ReportsPage() {
         {/* Carbon per room */}
         <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Daily Carbon by Room (kg CO₂)</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı Günlük Karbon (kg CO₂)</h2>
             <span className="material-symbols-outlined text-outline">more_horiz</span>
           </div>
 
           <div className="relative flex h-[250px] w-full items-end justify-between gap-2 px-2 pb-6">
             {loading && (
               <div className="flex h-full w-full items-center justify-center text-on-surface-variant">
-                Loading...
+                Yükleniyor...
               </div>
             )}
             {!loading &&
@@ -127,7 +127,7 @@ export default function ReportsPage() {
         {/* Wasted Cost per room */}
         <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Hourly Wasted Cost by Room (₺)</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı Saatlik İsraf Maliyeti (₺)</h2>
             <span className="material-symbols-outlined text-outline">more_horiz</span>
           </div>
 
@@ -155,12 +155,12 @@ export default function ReportsPage() {
       {/* Anomaly Log Table */}
       <section className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-lg">
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-h2 text-h2 text-on-surface">Room Analysis Log</h2>
+          <h2 className="font-h2 text-h2 text-on-surface">Oda Analiz Kayıtları</h2>
           <div className="flex gap-2">
-            <button onClick={() => alert('Filter options opened')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
+            <button onClick={() => alert('Filtreleme seçenekleri açıldı')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
               <span className="material-symbols-outlined">filter_list</span>
             </button>
-            <button onClick={() => alert('Search input opened')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
+            <button onClick={() => alert('Arama alanı açıldı')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
               <span className="material-symbols-outlined">search</span>
             </button>
           </div>
@@ -170,18 +170,18 @@ export default function ReportsPage() {
           <table className="w-full border-collapse text-left">
             <thead>
               <tr className="border-b border-surface-variant">
-                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Room ID</th>
-                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Device</th>
-                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Wasted Power (kW)</th>
-                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Daily Loss (₺)</th>
-                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Status</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Oda ID</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Cihaz</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">İsraf Güç (kW)</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Günlük Kayıp (₺)</th>
+                <th className="px-4 py-4 font-label-sm text-label-sm font-medium text-on-surface-variant">Durum</th>
               </tr>
             </thead>
             <tbody className="font-body-md text-body-md text-on-surface">
               {anomalies.length === 0 && (
                 <tr>
                   <td colSpan={5} className="px-4 py-8 text-center text-on-surface-variant">
-                    {loading ? 'Loading...' : 'No anomalies detected — all rooms normal'}
+                    {loading ? 'Yükleniyor...' : 'Anomali tespit edilmedi — tüm odalar normal'}
                   </td>
                 </tr>
               )}
@@ -199,7 +199,12 @@ export default function ReportsPage() {
                   <td className="px-4 py-4">₺{row.financialLossTl}</td>
                   <td className="px-4 py-4">
                     <span className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${getStatusClass(row.status)}`}>
-                      {row.status}
+                      {row.status === 'CRITICAL' ? 'KRİTİK' : 
+                       row.status === 'WARNING' ? 'UYARI' : 
+                       row.status === 'ATTENTION' ? 'DİKKAT' : 
+                       row.status === 'ANOMALY' ? 'ANOMALİ' : 
+                       row.status === 'ACTIVE' ? 'AKTİF' : 
+                       row.status === 'NORMAL' ? 'NORMAL' : row.status}
                     </span>
                   </td>
                 </tr>

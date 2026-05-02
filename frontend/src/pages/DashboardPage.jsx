@@ -10,43 +10,43 @@ import { getDeviceCostBreakdownChart, dashboardAlerts as fallbackAlerts } from '
 
 export default function DashboardPage() {
   const navigate = useNavigate();
-  // Live data from backend – auto-refresh every 30s
+  // Canlı veriler - her 30 saniyede bir güncellenir
   const { data: dashData, loading: dashLoading } = useApi(getDashboardSummary, [], 30_000);
   const { data: batchData, loading: batchLoading } = useApi(getBatchAnalysis, [], 30_000);
   const { data: alertsData } = useApi(getFrontendAlerts, [], 30_000);
 
-  // Extract values safely
+  // Verileri güvenli şekilde çıkar
   const summary = dashData?.data?.summary;
   const rooms = batchData?.data?.rooms || [];
   const liveAlerts = alertsData?.alerts || [];
 
-  // Metric values (live or fallback)
+  // Metrik değerler
   const totalWastePerHour = summary?.total_waste_per_hour ?? 0;
   const dailyCost = totalWastePerHour * 24;
   const totalRooms = summary?.total_rooms ?? 0;
   const wastingRooms = summary?.wasting_rooms ?? 0;
   const criticalRooms = summary?.critical_rooms ?? 0;
 
-  // Carbon estimate from rooms
+  // Odalardan karbon tahmini
   const totalCarbon = rooms.reduce(
     (sum, r) => sum + (r?.analysis?.financial?.instant_carbon_per_hour ?? 0),
     0
   );
 
-  // Device cost breakdown from live rooms
+  // Cihaz maliyet dağılımı
   const deviceBreakdown = buildDeviceBreakdown(rooms);
   const chartData =
     deviceBreakdown.length > 0 ? deviceBreakdown : getDeviceCostBreakdownChart();
 
-  // Alerts: prefer live, fallback to mock
+  // Uyarılar
   const alerts =
     liveAlerts.length > 0
       ? liveAlerts.map((a) => ({
-          title: a.message || a.title || 'Alert',
+          title: a.message || a.title || 'Uyarı',
           label: a.room_id,
           location: a.room_id,
-          severity: a.severity === 'critical' ? 'Critical' : a.severity === 'high' ? 'High' : 'Normal',
-          time: 'Now',
+          severity: a.severity === 'critical' ? 'Kritik' : a.severity === 'high' ? 'Yüksek' : 'Normal',
+          time: 'Şimdi',
           icon: a.severity === 'critical' ? 'warning' : a.severity === 'high' ? 'lightbulb' : 'info',
           tone: a.severity === 'critical' ? 'error' : a.severity === 'high' ? 'amber' : 'blue',
         }))
@@ -56,71 +56,71 @@ export default function DashboardPage() {
 
   return (
     <>
-      {/* ── Connection Status ────────────────────────── */}
+      {/* ── Bağlantı Durumu ────────────────────────── */}
       {!isLoading && summary && (
         <div className="flex items-center gap-2 rounded-xl bg-emerald-50 px-4 py-2 text-sm text-emerald-700 mb-2">
           <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-          Backend bagli — {totalRooms} oda izleniyor
+          Sunucuya bağlı — {totalRooms} oda izleniyor
         </div>
       )}
       {!isLoading && !summary && (
         <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-4 py-2 text-sm text-amber-700 mb-2">
           <span className="material-symbols-outlined text-[16px]">cloud_off</span>
-          Backend baglantisi kurulamadi — mock veri gosteriliyor
+          Sunucu bağlantısı kurulamadı — örnek veri gösteriliyor
         </div>
       )}
 
-      {/* ── Top Metric Cards ─────────────────────────── */}
+      {/* ── Üst Metrik Kartları ─────────────────────────── */}
       <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
         <MetricCard
-          title="Instant Loss (Hourly)"
+          title="Anlık Kayıp (Saatlik)"
           value={`₺${totalWastePerHour.toFixed(2)}`}
-          subtext={`${wastingRooms} oda israf yapiyor`}
+          subtext={`${wastingRooms} odada israf var`}
           icon="trending_down"
           iconTone="text-error"
           gradientClass="from-red-50 to-orange-100"
         />
         <MetricCard
-          title="Estimated Daily Cost"
+          title="Tahmini Günlük Maliyet"
           value={`₺${dailyCost.toFixed(2)}`}
-          subtext="Based on current consumption"
+          subtext="Mevcut tüketime göre"
           icon="payments"
           iconTone="text-orange-500"
           gradientClass="from-yellow-50 to-orange-100/50"
         />
         <MetricCard
-          title="Carbon Footprint (Hourly)"
+          title="Karbon Ayak İzi (Saatlik)"
           value={totalCarbon.toFixed(2)}
           valueSuffix=" kg CO₂"
-          subtext="Total campus emissions"
+          subtext="Kampüs toplam emisyonu"
           icon="eco"
           iconTone="text-emerald-500"
           gradientClass="from-emerald-50 to-green-100"
         />
         <MetricCard
-          title="Rooms Overview"
+          title="Odalar Özeti"
           value={`${criticalRooms}`}
           valueSuffix={` / ${totalRooms}`}
-          subtext="Critical / Total rooms"
+          subtext="Kritik / Toplam oda"
           icon="meeting_room"
           iconTone="text-primary"
           gradientClass="from-indigo-50 to-violet-100/50"
         />
       </section>
 
-      {/* ── Alerts + Pie Chart ───────────────────────── */}
+      {/* ── Uyarılar + Pasta Grafik ───────────────────────── */}
       <section className="grid grid-cols-1 gap-6 lg:grid-cols-3">
         <div className="glass-card flex flex-col p-6 lg:col-span-2">
           <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Latest Anomalies / Alerts</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">En Son Anomaliler / Uyarılar</h2>
             <span className="flex items-center gap-1 rounded-full bg-error-container/40 px-3 py-1 text-xs font-medium text-on-error-container">
-              {alerts.length} alert{alerts.length !== 1 ? 's' : ''}
+              {alerts.length} uyarı
             </span>
           </div>
 
           <div className="flex flex-1 flex-col gap-3">
             {alerts.length === 0 && (
-              <p className="py-8 text-center text-on-surface-variant">No active alerts</p>
+              <p className="py-8 text-center text-on-surface-variant">Aktif uyarı yok</p>
             )}
             {alerts.map((alert, idx) => (
               <div
@@ -160,48 +160,48 @@ export default function DashboardPage() {
         </div>
 
         <div className="glass-card flex flex-col p-6">
-          <h2 className="mb-4 font-h2 text-h2 text-on-surface">Cost Breakdown by Device</h2>
+          <h2 className="mb-4 font-h2 text-h2 text-on-surface">Cihaz Bazlı Maliyet Dağılımı</h2>
           <div className="min-h-[220px] flex-1 w-full">
             <DeviceCostPieChart data={chartData} />
           </div>
           <div className="mt-4 border-t border-surface-container pt-4">
-            <button onClick={() => alert('Full report downloading...')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-variant">
+            <button onClick={() => alert('Tüm rapor indiriliyor...')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-variant">
               <span className="material-symbols-outlined text-[18px]">download</span>
-              Download Full Report
+              Tüm Raporu İndir
             </button>
           </div>
         </div>
       </section>
 
-      {/* ── Room Status Link ─────────────────────────── */}
+      {/* ── Oda Durumları Bağlantısı ─────────────────────────── */}
       <section className="glass-card flex items-center justify-between p-6">
         <div>
-          <h2 className="font-h2 text-h2 text-on-surface">Room Status (Live)</h2>
+          <h2 className="font-h2 text-h2 text-on-surface">Oda Durumları (Canlı)</h2>
           <p className="mt-1 font-caption text-caption text-on-surface-variant">
-            Detailed real-time metrics for {rooms.length} monitored rooms.
+            {rooms.length} izlenen oda için detaylı gerçek zamanlı metrikler.
           </p>
         </div>
         <button
           onClick={() => navigate('/rooms')}
           className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-label-sm text-label-sm text-on-primary shadow-sm hover:bg-primary/90 transition-all"
         >
-          View All Rooms
+          Tüm Odaları Gör
           <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
         </button>
       </section>
 
-      {/* ── 3D Map ───────────────────────────────────── */}
+      {/* ── 3D Harita ───────────────────────────────────── */}
       <section className="glass-card flex flex-col p-6">
         <div className="mb-6 flex items-center justify-between">
           <div>
-            <h2 className="font-h2 text-h2 text-on-surface">Live 3D Digital Twin</h2>
+            <h2 className="font-h2 text-h2 text-on-surface">Canlı 3D Dijital İkiz</h2>
             <p className="mt-1 font-caption text-caption text-on-surface-variant">
-              Real-time thermal and energy mapping
+              Gerçek zamanlı termal ve enerji haritalaması
             </p>
           </div>
           <span className="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
             <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-            High Consumption
+            Yüksek Tüketim
           </span>
         </div>
         <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
@@ -212,17 +212,17 @@ export default function DashboardPage() {
   );
 }
 
-/* ── helpers ──────────────────────────────────────────────── */
+/* ── Yardımcı Fonksiyonlar ──────────────────────────────────────────────── */
 const deviceLabels = {
   klima: 'Klima',
-  aydinlatma: 'Aydinlatma',
+  aydinlatma: 'Aydınlatma',
   projeksiyon: 'Projeksiyon',
   pc_20_adet: "PC'ler (20)",
   pc: 'PC',
-  server: 'Server',
-  fiyans: 'Fiyans',
-  buzdolabi: 'Buzdolabi',
-  su_isitici: 'Su Isitici',
+  server: 'Sunucu',
+  fiyans: 'Fayans',
+  buzdolabi: 'Buzdolabı',
+  su_isitici: 'Su Isıtıcı',
   laboratuvar: 'Laboratuvar',
 };
 
@@ -259,7 +259,8 @@ function buildDeviceBreakdown(rooms) {
     name: deviceLabels[key] ?? key,
     value: parseFloat(v.cost.toFixed(2)),
     carbon: parseFloat(v.carbon.toFixed(3)),
-    section: 'Equipment',
+    section: 'Ekipman',
     color: deviceColors[key] ?? '#6B7280',
   }));
 }
+

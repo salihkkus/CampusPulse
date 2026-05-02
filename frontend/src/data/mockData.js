@@ -27,9 +27,9 @@ const deviceLabels = {
 };
 
 const deviceSections = {
-  klima: 'Cooling & HVAC',
-  aydinlatma: 'Lighting',
-  projeksiyon: 'AV Equipment',
+  klima: 'Soğutma & İklimlendirme',
+  aydinlatma: 'Aydınlatma',
+  projeksiyon: 'AV Ekipmanları',
 };
 
 const deviceColors = {
@@ -44,7 +44,7 @@ export const getDeviceCostBreakdownChart = () =>
     name: deviceLabels[key] ?? key,
     value: value.hourly_cost_tl,
     carbon: value.carbon_kg_per_hour,
-    section: deviceSections[key] ?? 'Other Equipment',
+    section: deviceSections[key] ?? 'Diğer Ekipmanlar',
     color: deviceColors[key] ?? '#6B7280',
   }));
 
@@ -52,36 +52,36 @@ export const dashboardAlerts = [
   {
     title: '101 nolu odada muhtemelen klima açık unutulmuş.',
     label: 'klima',
-    location: 'Room 101',
-    severity: 'Critical',
-    time: 'Now',
+    location: 'Oda 101',
+    severity: 'Kritik',
+    time: 'Şimdi',
     icon: 'warning',
     tone: 'error',
   },
   {
-    title: 'Lights On (Empty Room)',
+    title: 'Açık Işıklar (Boş Oda)',
     label: 'aydınlatma',
-    location: 'Lecture Hall A',
+    location: 'Amfi A',
     severity: '-₺45',
-    time: '4h ago',
+    time: '4s önce',
     icon: 'lightbulb',
     tone: 'amber',
   },
   {
-    title: 'Idle Workstations',
+    title: 'Boşta Çalışan Ekipman',
     label: 'projeksiyon',
-    location: 'Library Fl 2',
+    location: 'Kütüphane Kat 2',
     severity: '-₺20',
-    time: '5h ago',
+    time: '5s önce',
     icon: 'desktop_windows',
     tone: 'blue',
   },
 ];
 
 export const navigationItems = [
-  { label: 'Dashboard', icon: 'dashboard', path: '/', end: true },
-  { label: 'Rooms Status', icon: 'meeting_room', path: '/rooms' },
-  { label: '3D Live Map', icon: 'map', path: '/live-map' },
-  { label: 'Reports', icon: 'assessment', path: '/reports' },
+  { label: 'Gösterge Paneli', icon: 'dashboard', path: '/', end: true },
+  { label: 'Oda Durumları', icon: 'meeting_room', path: '/rooms' },
+  { label: '3D Canlı Harita', icon: 'map', path: '/live-map' },
+  { label: 'Raporlar', icon: 'assessment', path: '/reports' },
 
 ];

@@ -44,12 +44,17 @@ export default function RoomStatusCard({ room }) {
           <div>
             <h3 className="text-sm font-semibold text-on-surface">{room.room_id}</h3>
             <p className="text-xs text-on-surface-variant">
-              {occupancy ? 'Dolu' : 'Bos'} — {power.toFixed(0)}W
+              {occupancy ? 'Dolu' : 'Boş'} — {power.toFixed(0)}W
             </p>
           </div>
         </div>
         <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
-          {status}
+          {status === 'CRITICAL' ? 'KRİTİK' : 
+           status === 'WARNING' ? 'UYARI' : 
+           status === 'ATTENTION' ? 'DİKKAT' : 
+           status === 'ANOMALY' ? 'ANOMALİ' : 
+           status === 'ACTIVE' ? 'AKTİF' : 
+           status === 'NORMAL' ? 'NORMAL' : status}
         </span>
       </div>
 
@@ -62,7 +67,7 @@ export default function RoomStatusCard({ room }) {
           </span>
           <span className="flex items-center gap-1 text-orange-600">
             <span className="material-symbols-outlined text-[14px]">calendar_today</span>
-            ₺{dailyCost.toFixed(2)}/gun
+            ₺{dailyCost.toFixed(2)}/gün
           </span>
           <span className="flex items-center gap-1 text-emerald-600">
             <span className="material-symbols-outlined text-[14px]">eco</span>
@@ -99,7 +104,7 @@ export default function RoomStatusCard({ room }) {
       {expanded && recommendations.length > 0 && (
         <div className="mt-3 border-t border-white/50 pt-3 space-y-2">
           <p className="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-            Recommendations
+            Öneriler
           </p>
           {recommendations.map((rec, i) => (
             <div key={i} className="flex items-start gap-2 text-xs text-on-surface-variant">

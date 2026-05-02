@@ -16,7 +16,7 @@ export default function AppLayout() {
               </div>
               <input
                 className="block w-full rounded-full border-transparent bg-surface-container py-2.5 pl-12 pr-4 text-sm placeholder-outline shadow-sm transition-all focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary-fixed-dim"
-                placeholder="Search campus devices, rooms..."
+                placeholder="Cihazları ve odaları arayın..."
                 type="text"
               />
             </div>

@@ -80,6 +80,7 @@ export const dashboardAlerts = [
 
 export const navigationItems = [
   { label: 'Dashboard', icon: 'dashboard', path: '/', end: true },
+  { label: 'Rooms Status', icon: 'meeting_room', path: '/rooms' },
   { label: '3D Live Map', icon: 'map', path: '/live-map' },
   { label: 'Reports', icon: 'assessment', path: '/reports' },
 

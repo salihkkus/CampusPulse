@@ -1,4 +1,5 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 import MetricCard from '../components/MetricCard';
 import DeviceCostPieChart from '../components/charts/DeviceCostPieChart';
 import ThreeDMap from '../components/ThreeDMap';
@@ -8,6 +9,7 @@ import { getDashboardSummary, getBatchAnalysis, getFrontendAlerts } from '../ser
 import { getDeviceCostBreakdownChart, dashboardAlerts as fallbackAlerts } from '../data/mockData';
 
 export default function DashboardPage() {
+  const navigate = useNavigate();
   // Live data from backend – auto-refresh every 30s
   const { data: dashData, loading: dashLoading } = useApi(getDashboardSummary, [], 30_000);
   const { data: batchData, loading: batchLoading } = useApi(getBatchAnalysis, [], 30_000);
@@ -171,17 +173,22 @@ export default function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Room Status Cards ────────────────────────── */}
-      {rooms.length > 0 && (
-        <section>
-          <h2 className="mb-4 font-h2 text-h2 text-on-surface">Room Status (Live)</h2>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
-            {rooms.map((room) => (
-              <RoomStatusCard key={room.room_id} room={room} />
-            ))}
-          </div>
-        </section>
-      )}
+      {/* ── Room Status Link ─────────────────────────── */}
+      <section className="glass-card flex items-center justify-between p-6">
+        <div>
+          <h2 className="font-h2 text-h2 text-on-surface">Room Status (Live)</h2>
+          <p className="mt-1 font-caption text-caption text-on-surface-variant">
+            Detailed real-time metrics for {rooms.length} monitored rooms.
+          </p>
+        </div>
+        <button
+          onClick={() => navigate('/rooms')}
+          className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-label-sm text-label-sm text-on-primary shadow-sm hover:bg-primary/90 transition-all"
+        >
+          View All Rooms
+          <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+        </button>
+      </section>
 
       {/* ── 3D Map ───────────────────────────────────── */}
       <section className="glass-card flex flex-col p-6">

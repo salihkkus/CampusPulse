@@ -1,4 +1,5 @@
 import React from 'react';
+import ThreeDMap from '../components/ThreeDMap';
 
 export default function LiveMapPage() {
   return (
@@ -26,28 +27,7 @@ export default function LiveMapPage() {
         </div>
 
         <div className="relative flex min-h-[600px] flex-1 flex-col items-center justify-center overflow-hidden rounded-2xl border border-outline-variant/50 bg-surface-container">
-          {/* Decorative grid background to imply 3D space */}
-          <div
-            className="absolute inset-0 opacity-10"
-            style={{
-              backgroundImage: 'radial-gradient(#767586 1px, transparent 1px)',
-              backgroundSize: '32px 32px',
-            }}
-          ></div>
-
-          <div className="relative z-10 flex max-w-md flex-col items-center gap-6 rounded-2xl border border-outline-variant/30 bg-surface-container-lowest/80 p-6 text-center shadow-sm backdrop-blur-xl">
-            <span className="material-symbols-outlined text-4xl text-primary" data-icon="domain">
-              domain
-            </span>
-            <p className="font-body-md text-body-md text-on-surface-variant">
-              Three.js 3D Campus Model Will Mount Here.
-              <br />
-              Red lights will indicate high consumption areas.
-            </p>
-            <button className="rounded-xl bg-gradient-to-r from-primary to-surface-tint px-6 py-3 font-label-sm text-on-primary shadow-[0_8px_16px_-4px_rgba(70,72,212,0.3)] transition-all duration-300 hover:-translate-y-0.5 hover:shadow-[0_12px_20px_-4px_rgba(70,72,212,0.4)]">
-              Initialize Viewer
-            </button>
-          </div>
+          <ThreeDMap />
         </div>
       </div>
     </div>

@@ -1,6 +1,7 @@
 import React from 'react';
 import MetricCard from '../components/MetricCard';
 import DeviceCostPieChart from '../components/charts/DeviceCostPieChart';
+import ThreeDMap from '../components/ThreeDMap';
 import { apiResponseData, dashboardAlerts, getDeviceCostBreakdownChart } from '../data/mockData';
 
 export default function DashboardPage() {
@@ -110,15 +111,8 @@ export default function DashboardPage() {
           </span>
         </div>
 
-        <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-dashed border-surface-variant bg-surface-container-low p-8 text-center">
-          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_center,_var(--tw-gradient-stops))] from-primary-fixed to-transparent opacity-10" />
-          <span className="material-symbols-outlined mb-4 text-4xl text-outline-variant">view_in_ar</span>
-          <p className="max-w-md font-body-md text-body-md text-on-surface-variant">
-            Three.js 3D Campus Model Will Mount Here. Red lights will indicate high consumption areas.
-          </p>
-          <button className="mt-6 rounded-full border border-surface-variant bg-white px-4 py-2 text-sm font-medium text-on-surface shadow-sm transition-all hover:shadow-md">
-            Initialize Viewer
-          </button>
+        <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
+          <ThreeDMap />
         </div>
       </section>
     </>

@@ -82,5 +82,5 @@ export const navigationItems = [
   { label: 'Dashboard', icon: 'dashboard', path: '/', end: true },
   { label: '3D Live Map', icon: 'map', path: '/live-map' },
   { label: 'Reports', icon: 'assessment', path: '/reports' },
-  { label: 'Schedules', icon: 'calendar_today', path: '/schedules' },
+
 ];

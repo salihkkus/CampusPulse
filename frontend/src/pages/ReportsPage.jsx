@@ -45,11 +45,11 @@ export default function ReportsPage() {
         <h1 className="font-h1 text-h1 text-on-surface">Energy &amp; Financial Reports</h1>
 
         <div className="flex flex-wrap items-center gap-3">
-          <button className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
+          <button onClick={() => alert('PDF report generation started.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
             <span className="material-symbols-outlined text-[18px]">file_copy</span>
             Export PDF
           </button>
-          <button className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
+          <button onClick={() => alert('Downloading CSV...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-[0_2px_10px_-2px_rgba(0,0,0,0.02)] transition-all hover:-translate-y-px hover:shadow-[0_4px_12px_-2px_rgba(0,0,0,0.05)]">
             <span className="material-symbols-outlined text-[18px]">download</span>
             Download CSV
           </button>
@@ -157,10 +157,10 @@ export default function ReportsPage() {
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-h2 text-h2 text-on-surface">Room Analysis Log</h2>
           <div className="flex gap-2">
-            <button className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
+            <button onClick={() => alert('Filter options opened')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
               <span className="material-symbols-outlined">filter_list</span>
             </button>
-            <button className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
+            <button onClick={() => alert('Search input opened')} className="rounded-lg p-2 text-outline transition-colors hover:bg-surface-container">
               <span className="material-symbols-outlined">search</span>
             </button>
           </div>

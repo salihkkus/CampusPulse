@@ -133,13 +133,13 @@ class AIEngine:
         latest_prediction = predictions[-1]
         latest_score = anomaly_scores[-1]
         
-        is_anomaly = latest_prediction == -1
+        is_anomaly = bool(latest_prediction == -1)
         
         return {
             "is_anomaly": is_anomaly,
             "anomaly_score": float(abs(latest_score)),
             "analysis_type": "ml_isolation_forest",
-            "confidence": min(abs(latest_score) * 2, 1.0)
+            "confidence": float(min(abs(latest_score) * 2, 1.0))
         }
     
     def train_model_with_room_data(self, room_id: str, historical_data: List[Dict]):

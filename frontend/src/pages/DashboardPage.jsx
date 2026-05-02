@@ -163,7 +163,7 @@ export default function DashboardPage() {
             <DeviceCostPieChart data={chartData} />
           </div>
           <div className="mt-4 border-t border-surface-container pt-4">
-            <button className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-variant">
+            <button onClick={() => alert('Full report downloading...')} className="flex w-full items-center justify-center gap-2 rounded-xl bg-surface-container px-4 py-3 text-sm font-medium text-on-surface transition-colors hover:bg-surface-variant">
               <span className="material-symbols-outlined text-[18px]">download</span>
               Download Full Report
             </button>

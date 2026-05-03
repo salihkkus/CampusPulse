@@ -124,7 +124,8 @@ class FrontendBridge:
             "warning_rooms": 0,
             "normal_rooms": 0,
             "total_waste_tl": 0,
-            "total_carbon_kg": 0
+            "total_carbon_kg": 0,
+            "total_power_watts": 0
         }
         
         for analysis in rooms_analyses:
@@ -141,9 +142,11 @@ class FrontendBridge:
                 summary_stats["normal_rooms"] += 1
             
             # Toplam israfı hesapla
-            if analysis.get("is_wasting_energy", False):
-                summary_stats["total_waste_tl"] += analysis.get("instant_loss_tl_per_hour", 0)
-                summary_stats["total_carbon_kg"] += analysis.get("carbon_kg_per_hour", 0)
+            summary_stats["total_waste_tl"] += formatted_room.get("instant_loss_tl", 0)
+            summary_stats["total_carbon_kg"] += formatted_room.get("carbon_kg_per_hour", 0)
+                
+            # Toplam tüketimi hesapla (kW)
+            summary_stats["total_power_watts"] += formatted_room.get("current_power", 0)
         
         return {
             "timestamp": datetime.now().isoformat(),

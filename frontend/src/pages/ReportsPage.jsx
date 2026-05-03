@@ -70,7 +70,7 @@ export default function ReportsPage() {
 
   // Summary stats
   const totalWasteCost = isRangeMode ? (summary.total_waste_tl ?? 0) : (summary.total_waste_tl ?? 0);
-  const totalPower = isRangeMode ? (summary.total_power_kwh ?? 0) : (rooms.reduce((s, r) => s + (r.current_power ?? 0), 0) / 1000);
+  const totalPower = isRangeMode ? (summary.total_power_kwh ?? 0) : ((summary.total_power_watts ?? 0) / 1000);
 
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-lg">

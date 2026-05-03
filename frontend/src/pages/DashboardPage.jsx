@@ -20,17 +20,17 @@ export default function DashboardPage() {
 
   // Verileri güvenli şekilde çıkar
   const summary = dashData?.overview;
-  const financial = dashData?.financial_impact;
   const rooms = roomsData?.rooms || [];
   const liveAlerts = alertsData?.alerts || [];
 
   // Metrik değerler
-  const totalWastePerHour = financial?.instant_loss_per_hour ?? 0;
-  const projectedDailyCost = financial?.projected_daily_loss ?? 0;
+  const totalWastePerHour = summary?.total_waste_tl ?? 0;
+  const projectedDailyCost = totalWastePerHour * 8; // 8 saatlik mesai tahminine göre
   const totalRooms = summary?.total_rooms ?? 0;
   const criticalRoomsCount = summary?.critical_rooms ?? 0;
   const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL').map(r => r.building))];
-  const totalCarbon = financial?.total_carbon_kg_per_hour ?? 0;
+  const totalCarbon = summary?.total_carbon_kg ?? 0;
+  const totalPowerKwh = (summary?.total_power_watts ?? 0) / 1000;
 
   const handleBuildingClick = (buildingName) => {
     setActiveBuilding(buildingName === activeBuilding ? null : buildingName);
@@ -48,18 +48,15 @@ export default function DashboardPage() {
   });
 
   // Uyarılar
-  const alerts =
-    liveAlerts.length > 0
-      ? liveAlerts.map((a) => ({
-          title: a.message || a.title || 'Uyarı',
-          label: a.room_id,
-          location: a.room_id,
-          severity: a.severity === 'critical' ? 'Kritik' : a.severity === 'high' ? 'Yüksek' : 'Normal',
-          time: 'Şimdi',
-          icon: a.severity === 'critical' ? 'warning' : a.severity === 'high' ? 'lightbulb' : 'info',
-          tone: a.severity === 'critical' ? 'error' : a.severity === 'high' ? 'amber' : 'blue',
-        }))
-      : fallbackAlerts;
+  const alerts = liveAlerts.map((a) => ({
+    title: a.message || a.title || 'Uyarı',
+    label: a.room_id,
+    location: a.room_id,
+    severity: a.severity === 'critical' ? 'Kritik' : a.severity === 'high' ? 'Yüksek' : 'Normal',
+    time: 'Şimdi',
+    icon: a.severity === 'critical' ? 'warning' : a.severity === 'high' ? 'lightbulb' : 'info',
+    tone: a.severity === 'critical' ? 'error' : a.severity === 'high' ? 'amber' : 'blue',
+  }));
 
   const isLoading = dashLoading || roomsLoading;
 
@@ -113,6 +110,15 @@ export default function DashboardPage() {
           icon="eco"
           iconTone="text-emerald-500"
           gradientClass="from-emerald-50 to-green-100"
+        />
+        <MetricCard
+          title="Toplam Güç Tüketimi"
+          value={totalPowerKwh.toFixed(1)}
+          valueSuffix=" kWh"
+          subtext="Anlık kampüs toplamı"
+          icon="bolt"
+          iconTone="text-amber-500"
+          gradientClass="from-amber-50 to-yellow-100"
         />
         <MetricCard
           title="Odalar Özeti"

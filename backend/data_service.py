@@ -258,14 +258,22 @@ class DataService:
                         in_hour_range = True # Çoklu günde tüm saatleri al
                         
                     if in_hour_range:
-                        room_waste += d.get("wasted_cost_tl", 0)
-                        room_power += d.get("power_consumption", 0) / 1000.0 # kWh
+                        power_kw = d.get("power_consumption", 0) / 1000.0 # kWh
+                        
+                        # Tutarlılık için israfı güncel fiyat (2.50 TL) ile yeniden hesapla
+                        # Boş odada tüketim varsa israftır
+                        is_waste = d.get("occupancy_status", 0) == 0 and power_kw > 0
+                        if is_waste:
+                            room_waste += power_kw * 2.50
+                            
+                        room_power += power_kw
                         count += 1
             
             if count > 0:
                 total_waste_tl += room_waste
                 total_power_kwh += room_power
-                room_carbon = room_power * 0.5
+                # Tutarlılık için karbon çarpanını 0.45'e eşitledik
+                room_carbon = room_power * 0.45
                 total_carbon_kg += room_carbon
                 
                 room_stats.append({

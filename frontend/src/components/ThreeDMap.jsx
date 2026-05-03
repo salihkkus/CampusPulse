@@ -1,4 +1,4 @@
-import { OrbitControls, Text, Edges, ContactShadows, Environment, Sky } from '@react-three/drei';
+import { OrbitControls, Text, Edges, Environment, Sky } from '@react-three/drei';
 import { Canvas, useFrame } from '@react-three/fiber';
 import React, { useState, useRef } from 'react';
 
@@ -32,6 +32,161 @@ function Tree({ position, scale = 1 }) {
         <coneGeometry args={[1, 1.5, 8]} />
         {materials.treeLeaves}
       </mesh>
+    </group>
+  );
+}
+
+// Bush Component
+function Bush({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={[scale, scale, scale]}>
+      <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[0.4, 12, 12]} />
+        {materials.treeLeaves}
+      </mesh>
+      <mesh position={[0.3, 0.2, 0.1]} castShadow receiveShadow>
+        <sphereGeometry args={[0.28, 8, 8]} />
+        {materials.treeLeaves}
+      </mesh>
+      <mesh position={[-0.25, 0.18, 0.05]} castShadow receiveShadow>
+        <sphereGeometry args={[0.22, 8, 8]} />
+        {materials.treeLeaves}
+      </mesh>
+    </group>
+  );
+}
+
+// Round Tree (wider canopy variety)
+function RoundTree({ position, scale = 1 }) {
+  return (
+    <group position={position} scale={[scale, scale, scale]}>
+      <mesh position={[0, 0.6, 0]} castShadow receiveShadow>
+        <cylinderGeometry args={[0.18, 0.25, 1.2, 8]} />
+        {materials.treeTrunk}
+      </mesh>
+      <mesh position={[0, 2.0, 0]} castShadow receiveShadow>
+        <sphereGeometry args={[1.1, 12, 12]} />
+        <meshStandardMaterial color="#3a7d35" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+// Bench Component
+function Bench({ position, rotation = [0, 0, 0], scale = 1 }) {
+  return (
+    <group position={position} rotation={rotation} scale={[scale, scale, scale]}>
+      <mesh position={[0, 0.25, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.2, 0.05, 0.4]} />
+        <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+      </mesh>
+      <mesh position={[0, 0.5, -0.15]} rotation={[-0.1, 0, 0]} castShadow receiveShadow>
+        <boxGeometry args={[1.2, 0.3, 0.05]} />
+        <meshStandardMaterial color="#8b5a2b" roughness={0.9} />
+      </mesh>
+      <mesh position={[-0.5, 0.125, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.1, 0.25, 0.3]} />
+        <meshStandardMaterial color="#2d2d2d" roughness={0.8} />
+      </mesh>
+      <mesh position={[0.5, 0.125, 0]} castShadow receiveShadow>
+        <boxGeometry args={[0.1, 0.25, 0.3]} />
+        <meshStandardMaterial color="#2d2d2d" roughness={0.8} />
+      </mesh>
+    </group>
+  );
+}
+
+// Street Lamp
+function StreetLamp({ position }) {
+  return (
+    <group position={position}>
+      <mesh position={[0, 1.5, 0]} castShadow>
+        <cylinderGeometry args={[0.06, 0.09, 3, 8]} />
+        <meshStandardMaterial color="#444444" roughness={0.5} metalness={0.6} />
+      </mesh>
+      <mesh position={[0.35, 3.1, 0]} castShadow>
+        <cylinderGeometry args={[0.05, 0.05, 0.7, 8]} />
+        <meshStandardMaterial color="#444444" roughness={0.5} metalness={0.6} />
+      </mesh>
+      <mesh position={[0.7, 3.1, 0]} castShadow>
+        <sphereGeometry args={[0.18, 10, 10]} />
+        <meshStandardMaterial color="#fffde7" emissive="#fffacd" emissiveIntensity={1.5} roughness={0.2} />
+      </mesh>
+    </group>
+  );
+}
+
+
+// Sports Field (basketball court / multipurpose)
+function SportsField({ position, rotation = [0, 0, 0] }) {
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Court surface */}
+      <mesh position={[0, 0.02, 0]} receiveShadow>
+        <boxGeometry args={[8, 0.04, 14]} />
+        <meshStandardMaterial color="#c0392b" roughness={0.9} />
+      </mesh>
+      {/* Court lines */}
+      <mesh position={[0, 0.05, 0]} receiveShadow>
+        <boxGeometry args={[8.2, 0.01, 0.1]} />
+        <meshStandardMaterial color="#ffffff" roughness={1} />
+      </mesh>
+      <mesh position={[0, 0.05, 0]} rotation={[0, Math.PI / 2, 0]} receiveShadow>
+        <boxGeometry args={[14.2, 0.01, 0.1]} />
+        <meshStandardMaterial color="#ffffff" roughness={1} />
+      </mesh>
+      {/* Hoops */}
+      {[-6.5, 6.5].map((z, i) => (
+        <group key={i} position={[0, 0, z]}>
+          <mesh position={[0, 1.5, 0]} castShadow>
+            <cylinderGeometry args={[0.06, 0.06, 3, 8]} />
+            <meshStandardMaterial color="#555555" metalness={0.6} roughness={0.4} />
+          </mesh>
+          <mesh position={[0, 3.1, 0.45]} castShadow>
+            <torusGeometry args={[0.23, 0.035, 8, 24]} />
+            <meshStandardMaterial color="#e65100" roughness={0.4} metalness={0.3} />
+          </mesh>
+        </group>
+      ))}
+    </group>
+  );
+}
+
+// Parking Lot
+function ParkingLot({ position, rotation = [0, 0, 0] }) {
+  const spots = [];
+  for (let row = 0; row < 2; row++) {
+    for (let col = 0; col < 5; col++) {
+      spots.push([col * 2.2 - 4.4, row]);
+    }
+  }
+  return (
+    <group position={position} rotation={rotation}>
+      {/* Asphalt */}
+      <mesh position={[0, 0.01, 0]} receiveShadow>
+        <boxGeometry args={[13, 0.02, 10]} />
+        <meshStandardMaterial color="#4a4a4a" roughness={0.95} />
+      </mesh>
+      {/* Parking lines */}
+      {spots.map(([x, row], i) => (
+        <mesh key={i} position={[x, 0.03, (row - 0.5) * 4]} receiveShadow>
+          <boxGeometry args={[1.8, 0.01, 0.08]} />
+          <meshStandardMaterial color="#ffffff" roughness={1} />
+        </mesh>
+      ))}
+      {/* A few car silhouettes */}
+      {[[-4.4, 0, -2], [-2.2, 0, -2], [0, 0, -2], [2.2, 0, 2], [-2.2, 0, 2]].map(([x, y, z], i) => (
+        <group key={`car-${i}`} position={[x, 0.2, z]}>
+          <mesh castShadow>
+            <boxGeometry args={[1.6, 0.4, 3.2]} />
+            <meshStandardMaterial color={['#1a237e', '#4e342e', '#1b5e20', '#37474f', '#880e4f'][i]} roughness={0.3} metalness={0.5} />
+          </mesh>
+          <mesh position={[0, 0.32, 0]} castShadow>
+            <boxGeometry args={[1.4, 0.3, 1.8]} />
+            <meshStandardMaterial color={['#1a237e', '#4e342e', '#1b5e20', '#37474f', '#880e4f'][i]} roughness={0.3} metalness={0.5} />
+          </mesh>
+        </group>
+      ))}
     </group>
   );
 }
@@ -209,37 +364,169 @@ function AKMBuilding({ position, name, onClick, isActive, hasCritical }) {
 export default function ThreeDMap({ onBuildingClick, activeBuilding, criticalBuildings = [] }) {
   return (
     <div className="absolute inset-0">
-      <Canvas camera={{ position: [0, 8, 12], fov: 45 }}>
+      <Canvas camera={{ position: [0, 18, 28], fov: 48 }}>
         <Sky sunPosition={[10, 20, 10]} turbidity={0.3} rayleigh={0.5} />
         <Environment preset="city" />
-        <ambientLight intensity={0.4} />
-        <directionalLight position={[10, 20, 10]} intensity={1.2} />
+        <ambientLight intensity={0.5} />
+        <directionalLight position={[10, 20, 10]} intensity={1.3} castShadow />
+        <directionalLight position={[-15, 12, -10]} intensity={0.4} />
 
+        {/* ── Ana binalar ─────────────────────── */}
         <EngineeringBuilding position={[-10, 0, -4]} name="Mühendislik 1" onClick={onBuildingClick} isActive={activeBuilding === "Mühendislik 1"} hasCritical={criticalBuildings.includes("Mühendislik 1")} variant={1} />
         <EngineeringBuilding position={[0, 0, 5]} name="Mühendislik 2" onClick={onBuildingClick} isActive={activeBuilding === "Mühendislik 2"} hasCritical={criticalBuildings.includes("Mühendislik 2")} variant={2} />
         <AKMBuilding position={[12, 0, -2]} name="AKM" onClick={onBuildingClick} isActive={activeBuilding === "AKM"} hasCritical={criticalBuildings.includes("AKM")} />
 
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}><planeGeometry args={[100, 100]} /><meshStandardMaterial color="#8b9d77" roughness={1} /></mesh>
-        
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[1, 0.01, 0]}><planeGeometry args={[26, 3]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-10, 0.01, -1.5]}><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 2.5]}><planeGeometry args={[3, 4]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
-        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[10, 0.01, -1]}><planeGeometry args={[3, 5]} /><meshStandardMaterial color="#666666" roughness={0.9} /></mesh>
 
-        <Tree position={[-5, 0, 2]} scale={1.2} />
-        <Tree position={[-6, 0, -1]} scale={0.9} />
+
+        {/* ── Zemin ───────────────────────────── */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0, 0]}>
+          <planeGeometry args={[140, 140]} />
+          <meshStandardMaterial color="#7a9265" roughness={1} />
+        </mesh>
+
+        {/* ── Yollar ──────────────────────────── */}
+        {/* Ana yatay cadde */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 0]}>
+          <planeGeometry args={[80, 3.5]} />
+          <meshStandardMaterial color="#5a5a5a" roughness={0.9} />
+        </mesh>
+        {/* Dikey cadde */}
+        <mesh rotation={[-Math.PI/2, 0, Math.PI/2]} position={[0, 0.01, 0]}>
+          <planeGeometry args={[60, 3.5]} />
+          <meshStandardMaterial color="#5a5a5a" roughness={0.9} />
+        </mesh>
+        {/* Yan yol - sol */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[-10, 0.01, -2]}>
+          <planeGeometry args={[3, 6]} />
+          <meshStandardMaterial color="#666666" roughness={0.9} />
+        </mesh>
+        {/* Yan yol - orta */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, 0.01, 3]}>
+          <planeGeometry args={[3, 5]} />
+          <meshStandardMaterial color="#666666" roughness={0.9} />
+        </mesh>
+        {/* Yan yol - sağ */}
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[12, 0.01, -1]}>
+          <planeGeometry args={[3, 5]} />
+          <meshStandardMaterial color="#666666" roughness={0.9} />
+        </mesh>
+
+        {/* ── Sokak lambaları (yol boyunca) ───── */}
+        <StreetLamp position={[-18, 0, 1.5]} />
+        <StreetLamp position={[-12, 0, 1.5]} />
+        <StreetLamp position={[ -6, 0, 1.5]} />
+        <StreetLamp position={[  0, 0, 1.5]} />
+        <StreetLamp position={[  6, 0, 1.5]} />
+        <StreetLamp position={[ 12, 0, 1.5]} />
+        <StreetLamp position={[ 18, 0, 1.5]} />
+        <StreetLamp position={[-18, 0,-1.5]} />
+        <StreetLamp position={[-12, 0,-1.5]} />
+        <StreetLamp position={[  6, 0,-1.5]} />
+        <StreetLamp position={[ 18, 0,-1.5]} />
+        {/* Dikey yol lambaları */}
+        <StreetLamp position={[ 1.5, 0,-8]} />
+        <StreetLamp position={[ 1.5, 0,-14]} />
+        <StreetLamp position={[ 1.5, 0, 10]} />
+        <StreetLamp position={[ 1.5, 0, 16]} />
+
+        {/* ── Çam ağaçları (kampüs genelinde) ── */}
+        {/* Mühendislik 1 çevresi */}
+        <Tree position={[-5, 0, 2]}   scale={1.2} />
+        <Tree position={[-6, 0, -1]}  scale={0.9} />
         <Tree position={[-13, 0, -1]} scale={1.1} />
-        <Tree position={[-8, 0, 3]} scale={0.8} />
-        <Tree position={[4, 0, 2]} scale={1.3} />
-        <Tree position={[6, 0, -3]} scale={1.0} />
-        <Tree position={[8, 0, 4]} scale={1.2} />
-        <Tree position={[15, 0, 2]} scale={0.9} />
-        <Tree position={[14, 0, -6]} scale={1.1} />
-        <Tree position={[-2, 0, -4]} scale={1.0} />
-        <Tree position={[2, 0, -2]} scale={0.8} />
+        <Tree position={[-8, 0, 3]}   scale={0.8} />
+        {/* Mühendislik 2 çevresi */}
+        <Tree position={[4, 0, 2]}    scale={1.3} />
+        <Tree position={[6, 0, -3]}   scale={1.0} />
+        <Tree position={[8, 0, 4]}    scale={1.2} />
+        {/* AKM çevresi */}
+        <Tree position={[15, 0, 2]}   scale={0.9} />
+        <Tree position={[14, 0, -6]}  scale={1.1} />
+        {/* Genel kampüs - uzak köşeler */}
+        <Tree position={[-2, 0, -4]}  scale={1.0} />
+        <Tree position={[2, 0, -2]}   scale={0.8} />
         <Tree position={[-12, 0, -6]} scale={1.3} />
-        <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={5} maxDistance={30} />
+        <Tree position={[-20, 0,  5]} scale={1.1} />
+        <Tree position={[-25, 0,  0]} scale={1.3} />
+        <Tree position={[-25, 0, -5]} scale={0.9} />
+        <Tree position={[-20, 0, 15]} scale={1.2} />
+        <Tree position={[-15, 0, 22]} scale={1.0} />
+        <Tree position={[ -5, 0, 22]} scale={1.4} />
+        <Tree position={[  5, 0, 20]} scale={0.8} />
+        <Tree position={[ 15, 0, 18]} scale={1.1} />
+        <Tree position={[ 25, 0, 10]} scale={1.3} />
+        <Tree position={[ 28, 0,  0]} scale={0.9} />
+        <Tree position={[ 28, 0,-10]} scale={1.2} />
+        <Tree position={[ 20, 0,-18]} scale={1.0} />
+        <Tree position={[ 10, 0,-20]} scale={1.3} />
+        <Tree position={[  0, 0,-22]} scale={1.1} />
+        <Tree position={[-10, 0,-20]} scale={0.9} />
+        <Tree position={[-20, 0,-16]} scale={1.2} />
+        <Tree position={[-28, 0,-10]} scale={1.0} />
+        <Tree position={[-28, 0,  8]} scale={1.3} />
+        {/* Spor alanı çevresi */}
+        <Tree position={[-30, 0,-18]} scale={1.1} />
+        <Tree position={[-26, 0,-30]} scale={1.2} />
+        <Tree position={[-18, 0,-30]} scale={0.9} />
+
+        {/* ── Geniş yapraklı ağaçlar ──────────── */}
+        <RoundTree position={[-3, 0, -12]}  scale={1.2} />
+        <RoundTree position={[ 4, 0, -12]}  scale={1.0} />
+        <RoundTree position={[-16, 0,  2]}  scale={1.1} />
+        <RoundTree position={[ 18, 0, -5]}  scale={1.3} />
+        <RoundTree position={[-7, 0, 12]}   scale={0.9} />
+        <RoundTree position={[ 8, 0, 12]}   scale={1.2} />
+        <RoundTree position={[-20, 0, -2]}  scale={1.0} />
+        <RoundTree position={[ 22, 0, -8]}  scale={1.1} />
+        <RoundTree position={[ 0,  0,  17]} scale={1.3} />
+        <RoundTree position={[-13, 0, -15]} scale={1.0} />
+        <RoundTree position={[ 12, 0, -14]} scale={1.2} />
+
+        {/* ── Çalılar ─────────────────────────── */}
+        <Bush position={[-2, 0, 1]}   scale={0.8} />
+        <Bush position={[-1, 0, 1.2]} scale={1.2} />
+        <Bush position={[4, 0, -1]}   scale={0.9} />
+        <Bush position={[4.5, 0, -1.2]} scale={0.7} />
+        <Bush position={[-8, 0, -2]}  scale={1.1} />
+        <Bush position={[10, 0, 1]}   scale={1.3} />
+        <Bush position={[-3, 0, -9]}  scale={1.0} />
+        <Bush position={[3, 0, -9]}   scale={0.8} />
+        <Bush position={[-6, 0, -11]} scale={1.2} />
+        <Bush position={[6, 0, -11]}  scale={0.9} />
+        <Bush position={[-18, 0,  4]} scale={1.0} />
+        <Bush position={[-18, 0, -4]} scale={1.1} />
+        <Bush position={[ 18, 0,  4]} scale={0.8} />
+        <Bush position={[ 18, 0, -8]} scale={1.2} />
+        <Bush position={[-10, 0, 14]} scale={1.0} />
+        <Bush position={[ 10, 0, 14]} scale={0.9} />
+        <Bush position={[ 0, 0, -16]} scale={1.1} />
+        <Bush position={[-5, 0, 18]}  scale={1.3} />
+        <Bush position={[ 5, 0, 18]}  scale={0.8} />
+        <Bush position={[ 26, 0, 5]}  scale={1.0} />
+        <Bush position={[ 26, 0,-5]}  scale={1.2} />
+        <Bush position={[-26, 0, 5]}  scale={0.9} />
+
+        {/* ── Banklar ─────────────────────────── */}
+        {/* Plaza çevresi */}
+        <Bench position={[-3.5, 0, -9]} rotation={[0, 0, 0]} />
+        <Bench position={[1.5, 0, -9]}  rotation={[0, Math.PI, 0]} />
+        <Bench position={[-1, 0, -4.5]} rotation={[0, Math.PI / 2, 0]} />
+        {/* Yol kenarları */}
+        <Bench position={[-3, 0, 2]}    rotation={[0, Math.PI / 4, 0]} />
+        <Bench position={[3, 0, 2]}     rotation={[0, -Math.PI / 6, 0]} />
+        <Bench position={[8, 0, 2]}     rotation={[0, 0, 0]} />
+        <Bench position={[-8, 0, 2]}    rotation={[0, Math.PI, 0]} />
+        <Bench position={[8, 0, -2]}    rotation={[0, Math.PI / 2, 0]} />
+        {/* Kantin önü */}
+        <Bench position={[-20, 0, -4]}  rotation={[0, Math.PI / 3, 0]} />
+        <Bench position={[-20, 0, -2]}  rotation={[0, -Math.PI / 4, 0]} />
+        {/* Spor alanı yanı */}
+        <Bench position={[-28, 0, -20]} rotation={[0, Math.PI / 2, 0]} />
+        <Bench position={[-28, 0, -24]} rotation={[0, Math.PI / 2, 0]} />
+
+        <OrbitControls makeDefault minPolarAngle={0} maxPolarAngle={Math.PI / 2 - 0.05} minDistance={5} maxDistance={55} />
       </Canvas>
     </div>
   );
 }
+

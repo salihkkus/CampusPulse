@@ -193,22 +193,22 @@ export default function ReportsPage() {
 
       {/* Charts Row */}
       <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
-        {/* Main Energy Trend (Line Chart) */}
+        {/* Main Energy Trend (Bar Chart) */}
         <article className="flex flex-col rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-8">
           <div className="mb-6">
             <h2 className="flex items-center gap-2 font-h2 text-h2 text-on-surface">
-              <span className="material-symbols-outlined text-emerald-500">trending_up</span>
+              <span className="material-symbols-outlined text-emerald-500">bar_chart</span>
               {isRangeMode ? "Enerji Tüketim Trendi" : "Anlık Tüketim Analizi"}
             </h2>
             <p className="text-xs font-medium text-on-surface-variant/70">
-              {isRangeMode ? "Seçili aralıktaki günlük kWh değişimi" : "Oda bazlı anlık güç dağılımı"}
+              {isRangeMode ? "Seçili aralıktaki günlük kWh değişimi" : "Oda bazlı anlık güç dağılımı (W)"}
             </p>
           </div>
 
           <div className="relative h-[400px] w-full flex flex-col">
             <div className="flex-1 flex w-full gap-4 overflow-hidden">
               {/* Y-Axis Labels */}
-              <div className="flex h-full w-8 flex-col justify-between py-1 text-right text-[9px] font-bold text-on-surface-variant/40">
+              <div className="flex h-full w-12 flex-col justify-between py-1 text-right text-[9px] font-bold text-on-surface-variant/40">
                 {(() => {
                   const maxVal = Math.max(...rooms.map(rm => isRangeMode ? (rm.total_power_kwh ?? 0) : (rm.current_power ?? 0)), 1);
                   return [maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0].map((v, i) => (
@@ -217,73 +217,90 @@ export default function ReportsPage() {
                 })()}
               </div>
 
-              {/* Chart Main Area */}
-              <div className="relative flex-1 bg-surface-container-lowest/50 rounded-xl overflow-hidden">
+              {/* Bar Chart Area */}
+              <div className="relative flex-1 rounded-xl overflow-hidden">
                 {loading ? (
                   <div className="flex h-full items-center justify-center animate-pulse text-on-surface-variant">Yükleniyor...</div>
                 ) : (
-                  <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                    <defs>
-                      <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="rgba(16, 185, 129, 0.2)" />
-                        <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
-                      </linearGradient>
-                    </defs>
-                    {/* Horizontal Grid Lines */}
-                    {[0, 25, 50, 75, 100].map(v => (
-                      <line key={v} x1="0" y1={v} x2="100" y2={v} stroke="currentColor" className="text-outline/10" strokeWidth="0.5" strokeDasharray="2,2" />
-                    ))}
-                    {/* The Path */}
+                  <div className="flex h-full items-end gap-[2px] px-1">
                     {(() => {
-                      const points = rooms.map((r, i) => {
+                      const maxVal = Math.max(...rooms.map(rm => isRangeMode ? (rm.total_power_kwh ?? 0) : (rm.current_power ?? 0)), 1);
+                      // Show top 20 rooms sorted by consumption for readability
+                      const sortedRooms = [...rooms]
+                        .sort((a, b) => (isRangeMode ? (b.total_power_kwh ?? 0) : (b.current_power ?? 0)) - (isRangeMode ? (a.total_power_kwh ?? 0) : (a.current_power ?? 0)))
+                        .slice(0, 20);
+                      
+                      return sortedRooms.map((r, i) => {
                         const val = isRangeMode ? (r.total_power_kwh ?? 0) : (r.current_power ?? 0);
-                        const maxVal = Math.max(...rooms.map(rm => isRangeMode ? (rm.total_power_kwh ?? 0) : (rm.current_power ?? 0)), 1);
-                        const x = (i / Math.max(rooms.length - 1, 1)) * 100;
-                        const y = 100 - (val / maxVal) * 80 - 10;
-                        return `${x},${y}`;
-                      }).join(' L ');
-                      
-                      if (!points) return null;
-                      
-                      return (
-                        <>
-                          <polyline
-                            fill="none"
-                            stroke="#10b981"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            points={points.replace(/ L /g, ' ')}
-                            className="animate-draw-path"
-                            style={{ filter: 'drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2))' }}
-                          />
-                          <path
-                            d={`M 0,100 L ${points} L 100,100 Z`}
-                            fill="url(#lineGradient)"
-                            className="opacity-50"
-                          />
-                        </>
-                      );
+                        const pct = Math.max((val / maxVal) * 100, 1);
+                        const isHigh = pct > 70;
+                        const isMid = pct > 35;
+                        
+                        return (
+                          <div
+                            key={r.room_id}
+                            className="group relative flex-1 min-w-[12px] flex flex-col items-center justify-end"
+                            style={{ height: '100%' }}
+                          >
+                            {/* Tooltip */}
+                            <div className="absolute bottom-full mb-2 hidden group-hover:flex flex-col items-center z-10">
+                              <div className="rounded-lg bg-gray-800 px-2.5 py-1.5 text-[10px] text-white shadow-lg whitespace-nowrap">
+                                <span className="font-bold">{r.room_id}</span>
+                                <br />
+                                {isRangeMode ? `${val.toFixed(1)} kWh` : `${val.toFixed(0)} W`}
+                              </div>
+                              <div className="h-1.5 w-1.5 rotate-45 bg-gray-800 -mt-1" />
+                            </div>
+                            {/* Bar */}
+                            <div
+                              className={`w-full rounded-t-md transition-all duration-700 ease-out cursor-pointer
+                                ${isHigh ? 'bg-gradient-to-t from-red-500 to-orange-400' : isMid ? 'bg-gradient-to-t from-amber-500 to-yellow-400' : 'bg-gradient-to-t from-emerald-500 to-emerald-400'}
+                                hover:opacity-80 hover:shadow-lg`}
+                              style={{
+                                height: `${pct}%`,
+                                transitionDelay: `${i * 30}ms`,
+                                boxShadow: isHigh ? '0 0 12px rgba(239,68,68,0.3)' : 'none'
+                              }}
+                            />
+                          </div>
+                        );
+                      });
                     })()}
-                  </svg>
+                  </div>
                 )}
+                {/* Grid lines */}
+                <div className="pointer-events-none absolute inset-0 flex flex-col justify-between py-0">
+                  {[0, 1, 2, 3].map(i => (
+                    <div key={i} className="border-t border-dashed border-outline/10" />
+                  ))}
+                </div>
               </div>
             </div>
             
             {/* X-Axis Labels */}
-            <div className="flex justify-between pl-12 pr-2 pt-2 text-[8px] font-bold text-on-surface-variant/50 uppercase tracking-tighter">
+            <div className="flex justify-between pl-14 pr-2 pt-2 text-[7px] font-bold text-on-surface-variant/50 uppercase tracking-tighter overflow-hidden">
               {(() => {
-                const count = 5;
+                const sortedRooms = [...rooms]
+                  .sort((a, b) => (isRangeMode ? (b.total_power_kwh ?? 0) : (b.current_power ?? 0)) - (isRangeMode ? (a.total_power_kwh ?? 0) : (a.current_power ?? 0)))
+                  .slice(0, 20);
+                const count = Math.min(5, sortedRooms.length);
                 const labels = [];
-                if (rooms.length > 0) {
-                  const step = Math.max(Math.floor(rooms.length / (count - 1)), 1);
+                if (sortedRooms.length > 0) {
+                  const step = Math.max(Math.floor(sortedRooms.length / (count - 1)), 1);
                   for (let i = 0; i < count; i++) {
-                    const idx = Math.min(i * step, rooms.length - 1);
-                    const r = rooms[idx];
-                    labels.push(isRangeMode ? (r.room_id.split('_')[0]) : r.room_id);
+                    const idx = Math.min(i * step, sortedRooms.length - 1);
+                    labels.push(sortedRooms[idx].room_id.replace(/_/g, ' '));
                   }
                 }
-                return labels.map((l, i) => <span key={i} className="flex-1 text-center first:text-left last:text-right">{l}</span>);
+                return labels.map((l, i) => <span key={i} className="flex-1 text-center first:text-left last:text-right truncate">{l}</span>);
               })()}
+            </div>
+
+            {/* Legend */}
+            <div className="flex items-center justify-center gap-4 pt-3 text-[10px] font-medium text-on-surface-variant/60">
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-red-500 to-orange-400" /> Yüksek</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-amber-500 to-yellow-400" /> Orta</span>
+              <span className="flex items-center gap-1"><span className="inline-block h-2.5 w-2.5 rounded-sm bg-gradient-to-t from-emerald-500 to-emerald-400" /> Düşük</span>
             </div>
           </div>
         </article>

@@ -7,11 +7,11 @@ import { getBatchAnalysis } from '../services/api';
 const STATUS_FILTERS = [
   { key: 'ALL',       label: 'Tümü',      icon: 'apps',          color: 'bg-surface-container text-on-surface' },
   { key: 'CRITICAL',  label: 'Kritik',     icon: 'error',         color: 'bg-red-100 text-red-700' },
-  { key: 'WARNING',   label: 'Uyarı',      icon: 'warning',       color: 'bg-amber-100 text-amber-700' },
-  { key: 'ATTENTION', label: 'Dikkat',     icon: 'info',          color: 'bg-orange-100 text-orange-700' },
-  { key: 'ANOMALY',   label: 'Anomali',    icon: 'psychology',    color: 'bg-purple-100 text-purple-700' },
   { key: 'NORMAL',    label: 'Normal',     icon: 'check_circle',  color: 'bg-emerald-100 text-emerald-700' },
 ];
+
+const CRITICAL_STATUSES = new Set(['CRITICAL', 'WARNING', 'ATTENTION', 'ANOMALY']);
+const NORMAL_STATUSES = new Set(['NORMAL', 'ACTIVE']);
 
 export default function RoomsPage() {
   const navigate = useNavigate();
@@ -22,12 +22,11 @@ export default function RoomsPage() {
 
   // Durum sayılarını hesapla (badge'ler için)
   const statusCounts = useMemo(() => {
-    const counts = { ALL: rooms.length, CRITICAL: 0, WARNING: 0, ATTENTION: 0, ANOMALY: 0, NORMAL: 0 };
+    const counts = { ALL: rooms.length, CRITICAL: 0, NORMAL: 0 };
     rooms.forEach(r => {
       const s = r?.status ?? 'NORMAL';
-      if (counts[s] !== undefined) counts[s]++;
-      // ACTIVE statüsünü de NORMAL gibi say
-      if (s === 'ACTIVE') counts.NORMAL++;
+      if (CRITICAL_STATUSES.has(s)) counts.CRITICAL++;
+      else counts.NORMAL++;
     });
     return counts;
   }, [rooms]);
@@ -35,12 +34,10 @@ export default function RoomsPage() {
   // Filtrelenmiş ve sıralanmış odalar
   const filteredRooms = useMemo(() => {
     let list = rooms;
-    if (activeFilter !== 'ALL') {
-      list = rooms.filter(r => {
-        const s = r?.status ?? 'NORMAL';
-        if (activeFilter === 'NORMAL') return s === 'NORMAL' || s === 'ACTIVE';
-        return s === activeFilter;
-      });
+    if (activeFilter === 'CRITICAL') {
+      list = rooms.filter(r => CRITICAL_STATUSES.has(r?.status ?? 'NORMAL'));
+    } else if (activeFilter === 'NORMAL') {
+      list = rooms.filter(r => NORMAL_STATUSES.has(r?.status ?? 'NORMAL'));
     }
     // Kritik olanlar başa
     const priority = { CRITICAL: 0, WARNING: 1, ATTENTION: 2, ANOMALY: 3, ACTIVE: 4, NORMAL: 5 };

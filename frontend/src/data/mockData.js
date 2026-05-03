@@ -79,9 +79,9 @@ export const dashboardAlerts = [
 ];
 
 export const navigationItems = [
-  { label: 'Gösterge Paneli', icon: 'dashboard', path: '/', end: true },
-  { label: 'Oda Durumları', icon: 'meeting_room', path: '/rooms' },
-  { label: '3D Canlı Harita', icon: 'map', path: '/live-map' },
-  { label: 'Raporlar', icon: 'assessment', path: '/reports' },
+  { label: 'Gösterge Paneli', icon: 'dashboard', path: '/dashboard', end: true },
+  { label: 'Oda Durumları', icon: 'meeting_room', path: '/dashboard/rooms' },
+  { label: '3D Canlı Harita', icon: 'map', path: '/dashboard/live-map' },
+  { label: 'Raporlar', icon: 'assessment', path: '/dashboard/reports' },
 
 ];

@@ -190,7 +190,7 @@ export default function DashboardPage() {
           </p>
         </div>
         <button
-          onClick={() => navigate('/rooms')}
+          onClick={() => navigate('/dashboard/rooms')}
           className="flex items-center gap-2 rounded-xl bg-primary px-5 py-3 font-label-sm text-label-sm text-on-primary shadow-sm hover:bg-primary/90 transition-all"
         >
           Tüm Odaları Gör

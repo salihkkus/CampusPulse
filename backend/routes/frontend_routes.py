@@ -73,7 +73,10 @@ async def get_frontend_summary(timestamp: str = None, data_service=Depends(get_d
             "total_rooms": summary["total_rooms"],
             "critical_rooms": summary["critical_rooms"],
             "warning_rooms": summary["warning_rooms"],
-            "normal_rooms": summary["normal_rooms"]
+            "normal_rooms": summary["normal_rooms"],
+            "total_power_watts": summary["total_power_watts"],
+            "total_waste_tl": summary["total_waste_tl"],
+            "total_carbon_kg": summary["total_carbon_kg"]
         },
         "financial_impact": {
             "instant_loss_per_hour": round(total_waste_per_hour, 2),

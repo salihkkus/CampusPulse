@@ -13,6 +13,17 @@ export default function DashboardPage() {
   const [selectedTime, setSelectedTime] = React.useState(null);
   const [activeBuilding, setActiveBuilding] = React.useState(null);
 
+  // Mevcut zaman damgalarını al ve en sonuncuyu seç
+  React.useEffect(() => {
+    import('../services/api').then(api => {
+      api.getAvailableTimestamps().then(res => {
+        if (res.timestamps && res.timestamps.length > 0) {
+          setSelectedTime(res.timestamps[res.timestamps.length - 1]);
+        }
+      });
+    });
+  }, []);
+
   // Canlı veriler - seçilen zamana göre veya her 30 saniyede bir güncellenir
   const { data: dashData, loading: dashLoading } = useApi(() => getFrontendSummary(selectedTime), [selectedTime], 30_000);
   const { data: roomsData, loading: roomsLoading } = useApi(() => getFrontendRooms(selectedTime), [selectedTime], 30_000);
@@ -25,10 +36,10 @@ export default function DashboardPage() {
 
   // Metrik değerler
   const totalWastePerHour = summary?.total_waste_tl ?? 0;
-  const projectedDailyCost = totalWastePerHour * 8; // 8 saatlik mesai tahminine göre
+  const projectedDailyCost = dashData?.financial_impact?.projected_daily_loss ?? (totalWastePerHour * 24);
   const totalRooms = summary?.total_rooms ?? 0;
-  const criticalRoomsCount = summary?.critical_rooms ?? 0;
-  const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL').map(r => r.building))];
+  const criticalRoomsCount = (summary?.critical_rooms ?? 0) + (summary?.warning_rooms ?? 0);
+  const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL' || r.status === 'WARNING').map(r => r.building))];
   const totalCarbon = summary?.total_carbon_kg ?? 0;
   const totalPowerKwh = (summary?.total_power_watts ?? 0) / 1000;
 
@@ -85,7 +96,7 @@ export default function DashboardPage() {
       )}
 
       {/* ── Üst Metrik Kartları ─────────────────────────── */}
-      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+      <section className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-5">
         <MetricCard
           title="Anlık Kayıp (Saatlik)"
           value={`₺${totalWastePerHour.toFixed(2)}`}
@@ -164,7 +175,7 @@ export default function DashboardPage() {
                 <div className="min-w-0 flex-1">
                   <h3 className="text-label-sm font-label-sm text-on-surface">{alert.title}</h3>
                   <div className="mt-1 flex items-center gap-2">
-                    <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-on-secondary-container">
+                    <span className="rounded-full bg-secondary-container px-2 py-0.5 text-[10px] font-bold tracking-wider text-on-secondary-container">
                       {alert.label}
                     </span>
                     <p className="flex items-center gap-1 font-caption text-caption text-on-surface-variant">

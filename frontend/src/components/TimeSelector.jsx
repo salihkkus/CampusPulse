@@ -165,9 +165,9 @@ export default function TimeSelector({ onTimeChange, selectedTime }) {
                   }`}
                 style={{ scrollSnapAlign: 'center' }}
               >
-                <span className={`text-[10px] font-bold uppercase tracking-widest ${isSelected ? 'opacity-100' : 'opacity-70'}`}>{dayName}</span>
+                <span className={`text-[10px] font-bold tracking-widest ${isSelected ? 'opacity-100' : 'opacity-70'}`}>{dayName.toLocaleUpperCase('tr-TR')}</span>
                 <span className="text-2xl font-black leading-none my-1">{dayNum}</span>
-                <span className="text-[10px] font-bold opacity-60">{month}</span>
+                <span className="text-[10px] font-bold opacity-60">{month.toLocaleUpperCase('tr-TR')}</span>
               </button>
             );
           })}

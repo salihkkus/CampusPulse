@@ -134,6 +134,9 @@ class FrontendBridge:
             
             # İstatistikleri güncelle
             status = formatted_room["status"]
+            is_wasting = analysis.get("is_wasting_energy", False)
+            is_anomaly = analysis.get("is_anomaly", False)
+            
             if status == "CRITICAL":
                 summary_stats["critical_rooms"] += 1
             elif status == "WARNING" or status == "ATTENTION":
@@ -141,11 +144,12 @@ class FrontendBridge:
             else:
                 summary_stats["normal_rooms"] += 1
             
-            # Toplam israfı hesapla
-            summary_stats["total_waste_tl"] += formatted_room.get("instant_loss_tl", 0)
-            summary_stats["total_carbon_kg"] += formatted_room.get("carbon_kg_per_hour", 0)
+            # Sadece israf/anomali olan odaları maliyete ekle
+            if is_wasting or is_anomaly:
+                summary_stats["total_waste_tl"] += formatted_room.get("instant_loss_tl", 0)
+                summary_stats["total_carbon_kg"] += formatted_room.get("carbon_kg_per_hour", 0)
                 
-            # Toplam tüketimi hesapla (kW)
+            # Toplam tüketimi her zaman ekle (kW)
             summary_stats["total_power_watts"] += formatted_room.get("current_power", 0)
         
         return {

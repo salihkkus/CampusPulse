@@ -39,6 +39,9 @@ async def export_report_pdf(
     data_service=Depends(get_data_service)
 ):
     report_data = data_service.get_range_analysis(startDate, endDate, startHour, endHour)
+    if not report_data or "error" in report_data:
+        from fastapi.responses import JSONResponse
+        return JSONResponse(status_code=400, content={"error": report_data.get("error", "Veri bulunamadi") if report_data else "Veri bulunamadi"})
     summary = report_data.get("summary", {})
     rooms = report_data.get("rooms", [])
     daily_stats = report_data.get("daily_stats", [])
@@ -115,6 +118,7 @@ async def export_report_pdf(
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format='png', dpi=150)
     img_buf.seek(0)
+    img_buf.name = "chart1.png"
     pdf.image(img_buf, x=10, y=120, w=190)
     plt.close()
     
@@ -138,6 +142,7 @@ async def export_report_pdf(
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format='png', dpi=150)
     img_buf.seek(0)
+    img_buf.name = "chart2.png"
     pdf.image(img_buf, x=10, y=215, w=190)
     plt.close()
 
@@ -167,6 +172,7 @@ async def export_report_pdf(
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format='png', dpi=150)
     img_buf.seek(0)
+    img_buf.name = "chart3.png"
     pdf.image(img_buf, x=10, y=30, w=90)
     plt.close()
 
@@ -187,6 +193,7 @@ async def export_report_pdf(
     img_buf = io.BytesIO()
     plt.savefig(img_buf, format='png', dpi=150)
     img_buf.seek(0)
+    img_buf.name = "chart4.png"
     pdf.image(img_buf, x=105, y=30, w=90)
     plt.close()
     
@@ -222,13 +229,6 @@ async def export_report_pdf(
         io.BytesIO(pdf_output),
         media_type="application/pdf",
         headers={"Content-Disposition": f"attachment; filename=CampusPulse_Enerji_Raporu_{startDate}_{endDate}.pdf"}
-    )
-
-    pdf_output = pdf.output()
-    return StreamingResponse(
-        io.BytesIO(pdf_output),
-        media_type="application/pdf",
-        headers={"Content-Disposition": f"attachment; filename=CampusPulse_Rapor_{startDate}_{endDate}.pdf"}
     )
 
 @router.get("/export/csv")

@@ -14,8 +14,9 @@ export async function getDashboardSummary() {
 }
 
 // ─── All Rooms Batch Analysis ────────────────────────────────
-export async function getBatchAnalysis() {
-  return fetchJSON(`${BASE_URL}/v2/ai/batch-analysis`);
+export async function getBatchAnalysis(timestamp = null) {
+  const url = timestamp ? `${BASE_URL}/v2/ai/batch-analysis?timestamp=${timestamp}` : `${BASE_URL}/v2/ai/batch-analysis`;
+  return fetchJSON(url);
 }
 
 // ─── Single Room Status with AI ──────────────────────────────

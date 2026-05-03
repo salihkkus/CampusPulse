@@ -66,9 +66,9 @@ async def get_enhanced_room_analysis(room_id: str, data_service=Depends(get_data
         raise HTTPException(status_code=500, detail=f"Analysis error: {str(e)}")
 
 @router.get("/api/v2/ai/batch-analysis")
-async def get_batch_analysis(data_service=Depends(get_data_service), enhanced_ai=Depends(get_enhanced_ai)):
+async def get_batch_analysis(timestamp: str = None, data_service=Depends(get_data_service), enhanced_ai=Depends(get_enhanced_ai)):
     try:
-        all_rooms = data_service.get_all_rooms_current_status()
+        all_rooms = data_service.get_all_rooms_current_status(timestamp=timestamp)
         if not all_rooms:
             return {"success": True, "data": {"summary": {"total_rooms": 0, "wasting_rooms": 0, "critical_rooms": 0, "total_waste_cost": 0.0, "total_potential_savings": 0.0}, "rooms": [], "timestamp": datetime.now().isoformat()}}
         batch_result = enhanced_ai.batch_analyze_rooms(all_rooms)

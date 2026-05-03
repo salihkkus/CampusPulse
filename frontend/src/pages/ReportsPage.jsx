@@ -123,20 +123,36 @@ export default function ReportsPage() {
       <section className="flex justify-end gap-3">
         <button 
           onClick={() => {
-            const params = new URLSearchParams({ startDate: rangeParams.startDate, endDate: rangeParams.endDate });
+            const sd = isRangeMode ? rangeParams.startDate : selectedDate;
+            const ed = isRangeMode ? rangeParams.endDate : selectedDate;
+            if (!sd || !ed) { alert('Lütfen önce bir tarih seçin.'); return; }
+            const params = new URLSearchParams({ startDate: sd, endDate: ed });
+            if (isRangeMode) {
+              params.set('startHour', rangeParams.startHour);
+              params.set('endHour', rangeParams.endHour);
+            }
             window.open(`/api/v1/reports/export/pdf?${params.toString()}`, '_blank');
           }} 
-          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px"
+          disabled={isRangeMode ? (!rangeParams.startDate || !rangeParams.endDate) : !selectedDate}
+          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           <span className="material-symbols-outlined text-[18px]">file_copy</span>
           PDF
         </button>
         <button 
           onClick={() => {
-            const params = new URLSearchParams({ startDate: rangeParams.startDate, endDate: rangeParams.endDate });
+            const sd = isRangeMode ? rangeParams.startDate : selectedDate;
+            const ed = isRangeMode ? rangeParams.endDate : selectedDate;
+            if (!sd || !ed) { alert('Lütfen önce bir tarih seçin.'); return; }
+            const params = new URLSearchParams({ startDate: sd, endDate: ed });
+            if (isRangeMode) {
+              params.set('startHour', rangeParams.startHour);
+              params.set('endHour', rangeParams.endHour);
+            }
             window.open(`/api/v1/reports/export/csv?${params.toString()}`, '_blank');
           }} 
-          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px"
+          disabled={isRangeMode ? (!rangeParams.startDate || !rangeParams.endDate) : !selectedDate}
+          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:translate-y-0"
         >
           <span className="material-symbols-outlined text-[18px]">download</span>
           CSV

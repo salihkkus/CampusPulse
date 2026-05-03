@@ -187,12 +187,14 @@ class DiagnosisEngine:
     def _identify_wasting_devices(self, data: Dict[str, Any]) -> List[str]:
         """
         İsraf yapan cihazları tespit et
+        Sadece gerçek kampüs cihazlarını kontrol et (fiyans, buzdolabi vb. hariç)
         """
         wasting_devices = []
+        # Sadece gerçek sensör verisi olan cihaz tipleri
+        real_devices = ["klima", "projeksiyon", "pc_20_adet", "aydinlatma"]
         
         if data["occupancy_status"] == 0:  # Oda boşsa
-            # Her cihazı kontrol et
-            for device in self.device_power_ranges.keys():
+            for device in real_devices:
                 if self._detect_device(device, data):
                     wasting_devices.append(device)
         

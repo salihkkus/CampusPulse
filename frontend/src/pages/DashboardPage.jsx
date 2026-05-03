@@ -1,33 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import MetricCard from '../components/MetricCard';
-import ThreeDMap from '../components/ThreeDMap';
-import RoomStatusCard from '../components/RoomStatusCard';
+import CampusMapViewer from '../components/CampusMapViewer';
 import { useApi } from '../hooks/useApi';
-import { getFrontendSummary, getFrontendRooms, getFrontendAlerts } from '../services/api';
+import { getFrontendSummary, getFrontendRooms, getFrontendAlerts, getAvailableTimestamps, getBatchAnalysis } from '../services/api';
 import { dashboardAlerts as fallbackAlerts } from '../data/mockData';
 import TimeSelector from '../components/TimeSelector';
 
 export default function DashboardPage() {
   const navigate = useNavigate();
   const [selectedTime, setSelectedTime] = React.useState(null);
-  const [activeBuilding, setActiveBuilding] = React.useState(null);
 
   // Mevcut zaman damgalarını al ve en sonuncuyu seç
   React.useEffect(() => {
-    import('../services/api').then(api => {
-      api.getAvailableTimestamps().then(res => {
-        if (res.timestamps && res.timestamps.length > 0) {
-          setSelectedTime(res.timestamps[res.timestamps.length - 1]);
-        }
-      });
-    });
+    let cancelled = false;
+    getAvailableTimestamps().then(res => {
+      if (cancelled) return;
+      if (res.timestamps && res.timestamps.length > 0) {
+        setSelectedTime(res.timestamps[res.timestamps.length - 1]);
+      }
+    }).catch(() => {});
+    return () => { cancelled = true; };
   }, []);
 
   // Canlı veriler - seçilen zamana göre veya her 30 saniyede bir güncellenir
   const { data: dashData, loading: dashLoading } = useApi(() => getFrontendSummary(selectedTime), [selectedTime], 30_000);
   const { data: roomsData, loading: roomsLoading } = useApi(() => getFrontendRooms(selectedTime), [selectedTime], 30_000);
   const { data: alertsData } = useApi(() => getFrontendAlerts(selectedTime), [selectedTime], 30_000);
+
+  // 3D Harita için batch-analysis (LiveMap ile aynı zengin veri)
+  const { data: batchData, loading: batchLoading } = useApi(() => getBatchAnalysis(selectedTime), [selectedTime], 30_000);
+  const batchRooms = batchData?.data?.rooms || [];
 
   // Verileri güvenli şekilde çıkar
   const summary = dashData?.overview;
@@ -39,24 +42,8 @@ export default function DashboardPage() {
   const projectedDailyCost = dashData?.financial_impact?.projected_daily_loss ?? (totalWastePerHour * 24);
   const totalRooms = summary?.total_rooms ?? 0;
   const criticalRoomsCount = (summary?.critical_rooms ?? 0) + (summary?.warning_rooms ?? 0);
-  const criticalBuildings = [...new Set(rooms.filter(r => r.status === 'CRITICAL' || r.status === 'WARNING').map(r => r.building))];
   const totalCarbon = summary?.total_carbon_kg ?? 0;
   const totalPowerKwh = (summary?.total_power_watts ?? 0) / 1000;
-
-  const handleBuildingClick = (buildingName) => {
-    setActiveBuilding(buildingName === activeBuilding ? null : buildingName);
-  };
-
-  const displayedRooms = rooms.filter(room => {
-    if (activeBuilding === "Mühendislik 1") return room.room_id.startsWith("M1_");
-    if (activeBuilding === "Mühendislik 2") return room.room_id.startsWith("M2_");
-    if (activeBuilding === "AKM") return room.room_id.startsWith("AKM_");
-    return false;
-  }).sort((a, b) => {
-    if (a.status === 'CRITICAL' && b.status !== 'CRITICAL') return -1;
-    if (b.status === 'CRITICAL' && a.status !== 'CRITICAL') return 1;
-    return 0;
-  });
 
   // Uyarılar
   const alerts = liveAlerts.map((a) => ({
@@ -212,65 +199,12 @@ export default function DashboardPage() {
       </section>
 
       {/* ── 3D Harita ───────────────────────────────────── */}
-      <section className="flex flex-col gap-6 lg:flex-row h-full">
-        <div className={`glass-card flex flex-col p-6 transition-all duration-500 ease-in-out ${activeBuilding ? 'lg:w-2/3' : 'w-full'}`}>
-          <div className="mb-6 flex items-center justify-between">
-            <div>
-              <h2 className="font-h2 text-h2 text-on-surface">Canlı 3D Dijital İkiz</h2>
-              <p className="mt-1 font-caption text-caption text-on-surface-variant">
-                Gerçek zamanlı termal ve enerji haritalaması
-              </p>
-            </div>
-            <span className="flex items-center gap-1 rounded-md bg-red-50 px-2 py-1 text-xs font-medium text-red-600">
-              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
-              Yüksek Tüketim
-            </span>
-          </div>
-          <div className="relative flex min-h-[400px] flex-col items-center justify-center overflow-hidden rounded-2xl border border-surface-variant bg-surface-container-low">
-            <ThreeDMap 
-              criticalBuildings={criticalBuildings} 
-              onBuildingClick={handleBuildingClick}
-              activeBuilding={activeBuilding}
-            />
-          </div>
-        </div>
-
-        {/* Side Panel for Selected Building */}
-        {activeBuilding && (
-          <div className="flex flex-col gap-4 lg:w-1/3 max-h-[600px]">
-            <div className="glass-card p-6 h-full flex flex-col">
-              <div className="flex items-center justify-between mb-4 border-b border-surface-variant pb-4">
-                <h2 className="font-h2 text-h2 text-on-surface">{activeBuilding} Odaları</h2>
-                <button 
-                  onClick={() => setActiveBuilding(null)}
-                  className="flex h-8 w-8 items-center justify-center rounded-full hover:bg-surface-variant transition-colors text-on-surface"
-                >
-                  <span className="material-symbols-outlined text-[20px]">close</span>
-                </button>
-              </div>
-              
-              <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
-                {dashLoading || roomsLoading ? (
-                  <div className="flex justify-center p-8">
-                    <span className="material-symbols-outlined animate-spin text-primary text-4xl">autorenew</span>
-                  </div>
-                ) : displayedRooms.length > 0 ? (
-                  <div className="flex flex-col gap-4 pb-4">
-                    {displayedRooms.map(room => (
-                      <RoomStatusCard key={room.room_id} room={room} />
-                    ))}
-                  </div>
-                ) : (
-                  <div className="flex flex-col items-center justify-center p-8 text-center text-on-surface-variant h-full">
-                    <span className="material-symbols-outlined text-[48px] mb-4 opacity-50">meeting_room</span>
-                    <p className="font-medium">Bu binaya ait canlı veri bulunamadı.</p>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-      </section>
+      <CampusMapViewer
+        rooms={batchRooms}
+        loading={batchLoading}
+        minHeight="400px"
+        maxPanelH="600px"
+      />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 
 const statusConfig = {
   CRITICAL: { bg: 'bg-red-50', border: 'border-red-200', text: 'text-red-700', badge: 'bg-red-100 text-red-700', icon: 'error' },
@@ -9,6 +9,28 @@ const statusConfig = {
   NORMAL:   { bg: 'bg-emerald-50', border: 'border-emerald-200', text: 'text-emerald-700', badge: 'bg-emerald-100 text-emerald-700', icon: 'check_circle' },
 };
 
+// Cihaz adlarını Türkçe ve okunabilir formata çevir
+const DEVICE_LABELS = {
+  klima: 'Klima',
+  projeksiyon: 'Projeksiyon',
+  pc_20_adet: 'Bilgisayarlar',
+  pc: 'Bilgisayar',
+  aydinlatma: 'Aydınlatma',
+  aydınlatma: 'Aydınlatma',
+  server: 'Sunucu',
+};
+
+// Backend'in "fiyans", "buzdolabi", "laboratuvar", "su_isitici" gibi
+// gerçek sensör verisi olmayan cihaz tiplerini filtrele
+const KNOWN_DEVICES = new Set([
+  'klima', 'projeksiyon', 'pc_20_adet', 'pc',
+  'aydinlatma', 'aydınlatma', 'server',
+]);
+
+function cleanDeviceName(raw) {
+  return DEVICE_LABELS[raw] || null; // bilinmeyen cihazları gösterme
+}
+
 export default function RoomStatusCard({ room }) {
   const [expanded, setExpanded] = useState(false);
   const status = room?.status ?? 'NORMAL';
@@ -18,22 +40,47 @@ export default function RoomStatusCard({ room }) {
   const diagnosis = analysis.diagnosis || {};
   const financial = analysis.financial || {};
   const currentData = room?.current_data || {};
-  const recommendations = room?.recommendations || [];
+  const rawRecommendations = room?.recommendations || [];
 
   const power = currentData.power_consumption ?? 0;
   const occupancy = currentData.occupancy_status ?? 0;
-  const devices = currentData.detected_devices || [];
+  const rawDevices = currentData.detected_devices || [];
   const costPerHour = financial.wasted_cost_per_hour ?? 0;
   const dailyCost = financial.daily_cost ?? 0;
   const carbonHour = financial.instant_carbon_per_hour ?? 0;
   const isWasting = diagnosis.is_wasting ?? false;
   const primaryIssue = diagnosis.primary_issue;
 
+  // Bilinen cihazları filtrele ve Türkçeleştir
+  const devices = rawDevices
+    .filter(d => KNOWN_DEVICES.has(d))
+    .map(d => cleanDeviceName(d))
+    .filter(Boolean);
+
+  // Önerileri de-duplicate et (aynı title'a sahip olanlardan sadece birini göster)
+  // ve max 3 öneri göster
+  const recommendations = [];
+  const seenTitles = new Set();
+  for (const rec of rawRecommendations) {
+    const title = rec.title || rec.short || '';
+    if (title && !seenTitles.has(title)) {
+      seenTitles.add(title);
+      recommendations.push(rec);
+    }
+    if (recommendations.length >= 3) break;
+  }
+
+  // Kartı aç/kapat — event propagation'u durdur
+  const handleToggle = useCallback((e) => {
+    e.stopPropagation();
+    setExpanded(prev => !prev);
+  }, []);
+
   return (
     <div
       className={`rounded-2xl border p-5 transition-all duration-200 cursor-pointer
         ${cfg.bg} ${cfg.border} hover:shadow-md`}
-      onClick={() => setExpanded(!expanded)}
+      onClick={handleToggle}
     >
       {/* Header */}
       <div className="flex items-center justify-between">
@@ -48,14 +95,21 @@ export default function RoomStatusCard({ room }) {
             </p>
           </div>
         </div>
-        <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
-          {status === 'CRITICAL' ? 'KRİTİK' : 
-           status === 'WARNING' ? 'UYARI' : 
-           status === 'ATTENTION' ? 'DİKKAT' : 
-           status === 'ANOMALY' ? 'ANOMALİ' : 
-           status === 'ACTIVE' ? 'AKTİF' : 
-           status === 'NORMAL' ? 'NORMAL' : status}
-        </span>
+        <div className="flex items-center gap-2">
+          <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider ${cfg.badge}`}>
+            {status === 'CRITICAL' ? 'KRİTİK' : 
+             status === 'WARNING' ? 'UYARI' : 
+             status === 'ATTENTION' ? 'DİKKAT' : 
+             status === 'ANOMALY' ? 'ANOMALİ' : 
+             status === 'ACTIVE' ? 'AKTİF' : 
+             status === 'NORMAL' ? 'NORMAL' : status}
+          </span>
+          {recommendations.length > 0 && (
+            <span className={`material-symbols-outlined text-[16px] text-on-surface-variant transition-transform duration-200 ${expanded ? 'rotate-180' : ''}`}>
+              expand_more
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Quick stats */}
@@ -111,7 +165,15 @@ export default function RoomStatusCard({ room }) {
               <span className="material-symbols-outlined text-[14px] mt-0.5 text-primary">
                 lightbulb
               </span>
-              <span>{rec.title}: {rec.description}</span>
+              <div>
+                <span className="font-medium text-on-surface">{rec.title}</span>
+                {rec.description && (
+                  <span className="text-on-surface-variant"> — {rec.description}</span>
+                )}
+                {rec.savings && (
+                  <span className="ml-1 text-emerald-600 font-medium">({rec.savings})</span>
+                )}
+              </div>
             </div>
           ))}
         </div>

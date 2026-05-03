@@ -236,6 +236,8 @@ class DataService:
         except:
             return {"error": "Geçersiz tarih formatı. YYYY-MM-DD kullanın."}
         
+        daily_data = {}
+        
         for room in self.rooms_data:
             room_waste = 0
             room_power = 0
@@ -245,34 +247,35 @@ class DataService:
                 dt = datetime.fromisoformat(d["timestamp"].replace("Z", "+00:00"))
                 local_dt = dt + timedelta(hours=3)
                 curr_date = local_dt.date()
+                date_str = curr_date.strftime('%Y-%m-%d')
                 
                 # Tarih aralığında mı?
                 if sd <= curr_date <= ed:
-                    # Eğer aynı günse saat aralığına bak, farklı günlerdeyse (ara günler) tüm saatlere bak
-                    # Veya kullanıcı her gün için aynı saat aralığını istiyor olabilir.
-                    # Kullanıcının talebi "12-20 kasım arası" dediği için genellikle her günün o saatlerini kastedebilir.
-                    # Ama şimdilik basitçe tüm saatleri alalım eğer tek gün değilse.
                     if sd == ed:
                         in_hour_range = (start_hour <= local_dt.hour <= end_hour)
                     else:
-                        in_hour_range = True # Çoklu günde tüm saatleri al
+                        in_hour_range = True
                         
                     if in_hour_range:
                         power_kw = d.get("power_consumption", 0) / 1000.0 # kWh
                         
-                        # Tutarlılık için israfı güncel fiyat (2.50 TL) ile yeniden hesapla
-                        # Boş odada tüketim varsa israftır
+                        # Günlük istatistiklere ekle
+                        if date_str not in daily_data:
+                            daily_data[date_str] = {"power": 0, "waste": 0}
+                        
                         is_waste = d.get("occupancy_status", 0) == 0 and power_kw > 0
-                        if is_waste:
-                            room_waste += power_kw * 2.50
-                            
+                        waste_val = power_kw * 2.50 if is_waste else 0
+                        
+                        daily_data[date_str]["power"] += power_kw
+                        daily_data[date_str]["waste"] += waste_val
+                        
+                        room_waste += waste_val
                         room_power += power_kw
                         count += 1
             
             if count > 0:
                 total_waste_tl += room_waste
                 total_power_kwh += room_power
-                # Tutarlılık için karbon çarpanını 0.45'e eşitledik
                 room_carbon = room_power * 0.45
                 total_carbon_kg += room_carbon
                 
@@ -286,6 +289,15 @@ class DataService:
                     "avg_power_watt": round((room_power * 1000) / count, 2) if count > 0 else 0
                 })
         
+        # Günlük verileri sıralı listeye çevir
+        daily_stats = []
+        for d_str in sorted(daily_data.keys()):
+            daily_stats.append({
+                "date": d_str,
+                "total_power_kwh": round(daily_data[d_str]["power"], 2),
+                "total_waste_tl": round(daily_data[d_str]["waste"], 2)
+            })
+
         return {
             "start_date": start_date,
             "end_date": end_date,
@@ -297,6 +309,7 @@ class DataService:
                 "total_power_kwh": round(total_power_kwh, 2),
                 "total_carbon_kg": round(total_carbon_kg, 2),
             },
+            "daily_stats": daily_stats,
             "rooms": sorted(room_stats, key=lambda x: x["total_waste_tl"], reverse=True)
         }
 

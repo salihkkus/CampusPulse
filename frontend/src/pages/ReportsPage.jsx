@@ -121,11 +121,23 @@ export default function ReportsPage() {
 
       {/* Action Bar */}
       <section className="flex justify-end gap-3">
-        <button onClick={() => alert('PDF rapor oluşturma başlatıldı.')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px">
+        <button 
+          onClick={() => {
+            const params = new URLSearchParams({ startDate: rangeParams.startDate, endDate: rangeParams.endDate });
+            window.open(`/api/v1/reports/export/pdf?${params.toString()}`, '_blank');
+          }} 
+          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px"
+        >
           <span className="material-symbols-outlined text-[18px]">file_copy</span>
           PDF
         </button>
-        <button onClick={() => alert('CSV indiriliyor...')} className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px">
+        <button 
+          onClick={() => {
+            const params = new URLSearchParams({ startDate: rangeParams.startDate, endDate: rangeParams.endDate });
+            window.open(`/api/v1/reports/export/csv?${params.toString()}`, '_blank');
+          }} 
+          className="flex items-center gap-2 rounded-xl border border-surface-variant bg-surface-container-lowest px-4 py-2.5 font-label-sm text-label-sm text-on-surface-variant shadow-sm transition-all hover:-translate-y-px"
+        >
           <span className="material-symbols-outlined text-[18px]">download</span>
           CSV
         </button>
@@ -164,64 +176,246 @@ export default function ReportsPage() {
       </section>
 
       {/* Charts Row */}
-      <section className="grid grid-cols-1 gap-lg lg:grid-cols-2">
-        {/* Carbon per room */}
-        <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">Oda Bazlı {isRangeMode ? "Toplam" : "Günlük"} Karbon (kg CO₂)</h2>
-            <span className="material-symbols-outlined text-outline">more_horiz</span>
+      <section className="grid grid-cols-1 gap-8 lg:grid-cols-2">
+        {/* Main Energy Trend (Line Chart) */}
+        <article className="flex flex-col rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-8">
+          <div className="mb-6">
+            <h2 className="flex items-center gap-2 font-h2 text-h2 text-on-surface">
+              <span className="material-symbols-outlined text-emerald-500">trending_up</span>
+              {isRangeMode ? "Enerji Tüketim Trendi" : "Anlık Tüketim Analizi"}
+            </h2>
+            <p className="text-xs font-medium text-on-surface-variant/70">
+              {isRangeMode ? "Seçili aralıktaki günlük kWh değişimi" : "Oda bazlı anlık güç dağılımı"}
+            </p>
           </div>
 
-          <div className="relative flex h-[250px] w-full items-end justify-between gap-2 px-2 pb-6">
-            {loading && (
-              <div className="flex h-full w-full items-center justify-center text-on-surface-variant">
-                Yükleniyor...
+          <div className="relative h-[400px] w-full flex flex-col">
+            <div className="flex-1 flex w-full gap-4 overflow-hidden">
+              {/* Y-Axis Labels */}
+              <div className="flex h-full w-8 flex-col justify-between py-1 text-right text-[9px] font-bold text-on-surface-variant/40">
+                {(() => {
+                  const maxVal = Math.max(...rooms.map(rm => isRangeMode ? (rm.total_power_kwh ?? 0) : (rm.current_power ?? 0)), 1);
+                  return [maxVal, maxVal * 0.75, maxVal * 0.5, maxVal * 0.25, 0].map((v, i) => (
+                    <span key={i}>{v.toFixed(0)}</span>
+                  ));
+                })()}
               </div>
-            )}
-            {!loading &&
-              carbonData.map((item) => {
-                const height = `${Math.round((item.value / maxCarbon) * 100)}%`;
-                return (
-                  <div key={item.label} className="flex w-full flex-col items-center gap-2">
-                    <div className="group relative w-full rounded-t-lg bg-[#10b981]/30" style={{ height: height || '2%' }}>
-                      <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-inverse-surface px-2 py-1 text-xs text-inverse-on-surface opacity-0 transition-opacity group-hover:opacity-100">
-                        {item.value.toFixed(1)}
-                      </div>
-                    </div>
-                    <span className="font-caption text-caption text-outline">{item.label}</span>
-                  </div>
-                );
-              })}
-            <div className="absolute bottom-6 left-0 w-full border-b border-surface-variant" />
+
+              {/* Chart Main Area */}
+              <div className="relative flex-1 bg-surface-container-lowest/50 rounded-xl overflow-hidden">
+                {loading ? (
+                  <div className="flex h-full items-center justify-center animate-pulse text-on-surface-variant">Yükleniyor...</div>
+                ) : (
+                  <svg className="h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+                    <defs>
+                      <linearGradient id="lineGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor="rgba(16, 185, 129, 0.2)" />
+                        <stop offset="100%" stopColor="rgba(16, 185, 129, 0)" />
+                      </linearGradient>
+                    </defs>
+                    {/* Horizontal Grid Lines */}
+                    {[0, 25, 50, 75, 100].map(v => (
+                      <line key={v} x1="0" y1={v} x2="100" y2={v} stroke="currentColor" className="text-outline/10" strokeWidth="0.5" strokeDasharray="2,2" />
+                    ))}
+                    {/* The Path */}
+                    {(() => {
+                      const points = rooms.map((r, i) => {
+                        const val = isRangeMode ? (r.total_power_kwh ?? 0) : (r.current_power ?? 0);
+                        const maxVal = Math.max(...rooms.map(rm => isRangeMode ? (rm.total_power_kwh ?? 0) : (rm.current_power ?? 0)), 1);
+                        const x = (i / Math.max(rooms.length - 1, 1)) * 100;
+                        const y = 100 - (val / maxVal) * 80 - 10;
+                        return `${x},${y}`;
+                      }).join(' L ');
+                      
+                      if (!points) return null;
+                      
+                      return (
+                        <>
+                          <polyline
+                            fill="none"
+                            stroke="#10b981"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            points={points.replace(/ L /g, ' ')}
+                            className="animate-draw-path"
+                            style={{ filter: 'drop-shadow(0 4px 6px rgba(16, 185, 129, 0.2))' }}
+                          />
+                          <path
+                            d={`M 0,100 L ${points} L 100,100 Z`}
+                            fill="url(#lineGradient)"
+                            className="opacity-50"
+                          />
+                        </>
+                      );
+                    })()}
+                  </svg>
+                )}
+              </div>
+            </div>
+            
+            {/* X-Axis Labels */}
+            <div className="flex justify-between pl-12 pr-2 pt-2 text-[8px] font-bold text-on-surface-variant/50 uppercase tracking-tighter">
+              {(() => {
+                const count = 5;
+                const labels = [];
+                if (rooms.length > 0) {
+                  const step = Math.max(Math.floor(rooms.length / (count - 1)), 1);
+                  for (let i = 0; i < count; i++) {
+                    const idx = Math.min(i * step, rooms.length - 1);
+                    const r = rooms[idx];
+                    labels.push(isRangeMode ? (r.room_id.split('_')[0]) : r.room_id);
+                  }
+                }
+                return labels.map((l, i) => <span key={i} className="flex-1 text-center first:text-left last:text-right">{l}</span>);
+              })()}
+            </div>
           </div>
         </article>
 
-        {/* Wasted Cost per room */}
-        <article className="rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-md shadow-[0_8px_30px_rgb(0,0,0,0.04)] transition-all duration-300 hover:-translate-y-[2px] hover:shadow-[0_12px_40px_rgb(0,0,0,0.06)] lg:p-lg">
-          <div className="mb-6 flex items-center justify-between">
-            <h2 className="font-h2 text-h2 text-on-surface">
-              {isRangeMode ? "Aralık Boyunca Oda Bazlı İsraf (₺)" : "Oda Bazlı Saatlik İsraf Maliyeti (₺)"}
+        {/* Top Carbon Emitting Rooms (Horizontal Bar Chart) */}
+        <article className="flex flex-col rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-8">
+          <div className="mb-6">
+            <h2 className="flex items-center gap-2 font-h2 text-h2 text-on-surface">
+              <span className="material-symbols-outlined text-teal-500">cloud_done</span>
+              En Yüksek Karbon Salınımı
             </h2>
-            <span className="material-symbols-outlined text-outline">more_horiz</span>
+            <p className="text-xs font-medium text-on-surface-variant/70">En fazla emisyon üreten ilk 10 oda (kg CO₂)</p>
           </div>
-          
-          <div className="relative flex h-[250px] w-full items-end justify-between gap-2 px-2 pb-6">
-            {!loading && rooms.map((room) => {
-              const cost = isRangeMode ? (room.total_waste_tl ?? 0) : (room.instant_loss_tl ?? 0);
-              const maxCost = Math.max(...rooms.map((r) => isRangeMode ? (r.total_waste_tl ?? 0) : (r.instant_loss_tl ?? 0)), 0.1);
-              const height = `${Math.round((cost / maxCost) * 100)}%`;
-              return (
-                <div key={room.room_id} className="flex w-full flex-col items-center gap-2">
-                  <div className="group relative w-full rounded-t-lg bg-[#f97316]/30" style={{ height: height || '2%' }}>
-                    <div className="absolute -top-8 left-1/2 -translate-x-1/2 rounded bg-inverse-surface px-2 py-1 text-xs text-inverse-on-surface opacity-0 transition-opacity group-hover:opacity-100">
-                      ₺{cost.toFixed(2)}
+
+          <div className="flex flex-1 flex-col gap-4 justify-center h-[400px]">
+            {loading ? (
+              <div className="flex h-full items-center justify-center animate-pulse text-on-surface-variant">Analiz ediliyor...</div>
+            ) : (
+              rooms.slice(0, 10).map((room, idx) => {
+                const val = isRangeMode ? (room.total_carbon_kg ?? 0) : (room.carbon_kg_per_hour ?? 0);
+                const maxVal = Math.max(...rooms.map(r => isRangeMode ? (r.total_carbon_kg ?? 0) : (r.carbon_kg_per_hour ?? 0)), 0.1);
+                const w = (val / maxVal) * 100;
+                return (
+                  <div key={room.room_id} className="flex flex-col gap-1">
+                    <div className="flex justify-between items-end">
+                      <span className="text-[10px] font-bold text-on-surface uppercase tracking-tight">{room.room_name || room.room_id}</span>
+                      <span className="text-[10px] font-black text-teal-600">{val.toFixed(2)} kg</span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-container">
+                      <div 
+                        className="h-full rounded-full bg-gradient-to-r from-teal-500 to-emerald-400 transition-all duration-1000"
+                        style={{ width: `${w}%`, transitionDelay: `${idx * 0.1}s` }}
+                      />
                     </div>
                   </div>
-                  <span className="font-caption text-caption text-outline">{room.room_id}</span>
+                );
+              })
+            )}
+          </div>
+        </article>
+
+        {/* Building Distribution (Pie Chart) */}
+        <article className="flex flex-col rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-8">
+          <div className="mb-8">
+            <h2 className="flex items-center gap-2 font-h2 text-h2 text-on-surface">
+              <span className="material-symbols-outlined text-indigo-500">pie_chart</span>
+              Bina Bazlı Tüketim Payı
+            </h2>
+          </div>
+          
+          <div className="flex flex-1 flex-col items-center justify-center gap-8 sm:flex-row h-[400px]">
+            <div className="relative h-48 w-48">
+              <svg className="h-full w-full -rotate-90" viewBox="0 0 36 36">
+                {(() => {
+                  const buildingData = {};
+                  rooms.forEach(r => {
+                    const b = r.building || "Diğer";
+                    buildingData[b] = (buildingData[b] || 0) + (isRangeMode ? (r.total_power_kwh ?? 0) : (r.current_power ?? 0));
+                  });
+                  const total = Object.values(buildingData).reduce((a, b) => a + b, 0) || 1;
+                  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+                  let offset = 0;
+                  
+                  return Object.entries(buildingData).map(([name, val], i) => {
+                    const perc = (val / total) * 100;
+                    const dash = `${perc} ${100 - perc}`;
+                    const currentOffset = offset;
+                    offset += perc;
+                    return (
+                      <circle
+                        key={name}
+                        cx="18" cy="18" r="16"
+                        fill="none"
+                        stroke={colors[i % colors.length]}
+                        strokeWidth="3.5"
+                        strokeDasharray={dash}
+                        strokeDashoffset={-currentOffset}
+                        className="transition-all duration-1000"
+                        style={{ filter: 'drop-shadow(0 2px 4px rgba(0,0,0,0.1))' }}
+                      />
+                    );
+                  });
+                })()}
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center">
+                <span className="text-2xl font-black text-on-surface">%{((summary.total_power_kwh || 0) > 0 ? 100 : 0)}</span>
+                <span className="text-[10px] font-bold text-on-surface-variant uppercase">Kapsam</span>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              {(() => {
+                  const buildingData = {};
+                  rooms.forEach(r => {
+                    const b = r.building || "Diğer";
+                    buildingData[b] = (buildingData[b] || 0) + (isRangeMode ? (r.total_power_kwh ?? 0) : (r.current_power ?? 0));
+                  });
+                  const total = Object.values(buildingData).reduce((a, b) => a + b, 0) || 1;
+                  const colors = ['#10b981', '#3b82f6', '#f59e0b', '#8b5cf6', '#ec4899'];
+                  
+                  return Object.entries(buildingData).map(([name, val], i) => (
+                    <div key={name} className="flex items-center gap-3">
+                      <div className="h-3 w-3 rounded-full" style={{ backgroundColor: colors[i % colors.length] }} />
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-on-surface">{name}</span>
+                        <span className="text-[10px] text-on-surface-variant">%{((val / total) * 100).toFixed(1)}</span>
+                      </div>
+                    </div>
+                  ));
+              })()}
+            </div>
+          </div>
+        </article>
+
+        {/* Room Type Distribution */}
+        <article className="flex flex-col rounded-[32px] border border-surface-container-highest bg-surface-container-lowest p-6 shadow-[0_8px_30px_rgb(0,0,0,0.04)] lg:p-8">
+          <div className="mb-8">
+            <h2 className="flex items-center gap-2 font-h2 text-h2 text-on-surface">
+              <span className="material-symbols-outlined text-purple-500">category</span>
+              Kategori Analizi
+            </h2>
+          </div>
+          
+          <div className="flex flex-1 flex-col gap-6 justify-center h-[400px]">
+            {(() => {
+              const typeData = {};
+              rooms.forEach(r => {
+                const parts = r.room_id.split('_');
+                const t = parts[1] || "Diğer";
+                typeData[t] = (typeData[t] || 0) + (isRangeMode ? (r.total_power_kwh ?? 0) : (r.current_power ?? 0));
+              });
+              const maxVal = Math.max(...Object.values(typeData), 1);
+              
+              return Object.entries(typeData).map(([name, val]) => (
+                <div key={name} className="flex flex-col gap-1.5">
+                  <div className="flex justify-between text-xs font-bold">
+                    <span className="text-on-surface">{name}</span>
+                    <span className="text-on-surface-variant">{val.toFixed(1)} kWh</span>
+                  </div>
+                  <div className="h-3 w-full overflow-hidden rounded-full bg-surface-container">
+                    <div 
+                      className="h-full rounded-full bg-purple-500 transition-all duration-1000"
+                      style={{ width: `${(val / maxVal) * 100}%` }}
+                    />
+                  </div>
                 </div>
-              );
-            })}
-            <div className="absolute bottom-6 left-0 w-full border-b border-surface-variant" />
+              ));
+            })()}
           </div>
         </article>
       </section>

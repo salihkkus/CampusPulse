@@ -38,3 +38,5 @@ graph LR
   A[IoT & Mock Veri] --> B[Yapay Zeka Motoru]
   B --> C[Backend & API]
   C --> D[3D Dijital İkiz]
+
+📁 Proje Dosyaları ve Dokümanlar: https://drive.google.com/drive/folders/10g2qQrcajHxdFh7CzZzixgROO4KasuMx?usp=sharing

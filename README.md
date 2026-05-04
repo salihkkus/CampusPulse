@@ -27,8 +27,8 @@ Ortalama bir kampüs yılda milyonlarca kWh enerji tüketmektedir; ancak asıl s
 ## CampusPulse Çözümü
 CampusPulse, bu finansal yükü dijital bir denetim mekanizmasına dönüştürür:
 *   **Yapay Zeka Denetim Katmanı:** Enerji tüketimini ders programlarıyla senkronize analiz eden hibrit bir yapı sunar.
-*   **Isolation Forest Algoritması:** Veri setindeki gizli enerji israflarını ve uç değerleri milisaniyeler içinde teşhis eder[cite: 1].
-*   **3D Dijital İkiz:** Tespit edilen anomalileri doğrudan Three.js tabanlı arayüz üzerinde "Nokta Atışı Müdahale Planı" olarak görselleştirir[cite: 1].
+*   **Isolation Forest Algoritması:** Veri setindeki gizli enerji israflarını ve uç değerleri milisaniyeler içinde teşhis eder.
+*   **3D Dijital İkiz:** Tespit edilen anomalileri doğrudan Three.js tabanlı arayüz üzerinde "Nokta Atışı Müdahale Planı" olarak görselleştirir.
 ---
 
 Proje Dosyaları ve Dokümanlar: https://drive.google.com/drive/folders/10g2qQrcajHxdFh7CzZzixgROO4KasuMx?usp=sharing

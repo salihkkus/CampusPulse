@@ -11,7 +11,8 @@
 
 | 3D Dijital İkiz Görünümü | Anomali Analiz Paneli |
 | :---: | :---: |
-| ![3D Model Görünümü](https://via.placeholder.com/400x250?text=3D+Digital+Twin+View) | ![Dashboard Görünümü](https://via.placeholder.com/400x250?text=AI+Anomaly+Dashboard) |
+| ![3D Model Görünümü](<img width="1600" height="757" alt="3d" src="https://github.com/user-attachments/assets/25c96f3b-b9fa-4146-a774-1d6cee2d5cd1" />
+) | ![Dashboard Görünümü](https://via.placeholder.com/400x250?text=AI+Anomaly+Dashboard) |
 | *Three.js ile hazırlanan interaktif kampüs haritası.* | *Tespit edilen israfların finansal ve ekolojik dökümü.* |
 
 ---

@@ -9,8 +9,8 @@
 ## Ekip Üyeleri
 
 *   **Salih Karakuş** - AI & Backend Developer
-*   **Muhammet Canlı** - 3D & Frontend Developer[cite: 1]
-*   **Eren** - Data Analyst & Researcher[cite: 1]
+*   **Muhammet Canlı** - 3D & Frontend Developer
+*   **Eren** - Data Analyst & Researcher
 
 ---
 ## Uygulama Arayüzü

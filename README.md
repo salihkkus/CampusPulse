@@ -10,7 +10,7 @@
 
 *   **Salih Karakuş** - AI & Backend Developer
 *   **Muhammet Canlı** - 3D & Frontend Developer
-*   **Eren** - Data Analyst & Researcher
+*   **Eren Erdem** - Data Analyst & Researcher
 
 ---
 ## Uygulama Arayüzü

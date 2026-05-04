@@ -46,5 +46,3 @@ graph LR
   A[IoT & Mock Veri] --> B[Yapay Zeka Motoru]
   B --> C[Backend & API]
   C --> D[3D Dijital İkiz]
-
----

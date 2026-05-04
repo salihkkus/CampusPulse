@@ -6,7 +6,13 @@
 > **🏆 Hackathon Başarısı:** Bu proje, 30 takımın katıldığı hackathon kapsamında **2.lik Ödülü** kazanmıştır.
 
 ---
+## Ekip Üyeleri
 
+*   **Salih Karakuş** - AI & Backend Developer
+*   **Muhammet Canlı** - 3D & Frontend Developer[cite: 1]
+*   **Eren** - Data Analyst & Researcher[cite: 1]
+
+---
 ## Uygulama Arayüzü
 
 | 3D Dijital İkiz Görünümü | Anomali Analiz Paneli |
@@ -40,3 +46,5 @@ graph LR
   A[IoT & Mock Veri] --> B[Yapay Zeka Motoru]
   B --> C[Backend & API]
   C --> D[3D Dijital İkiz]
+
+---

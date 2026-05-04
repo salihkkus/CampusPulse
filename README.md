@@ -7,15 +7,12 @@
 
 ---
 
-## 📸 Uygulama Arayüzü
+## Uygulama Arayüzü
 
 | 3D Dijital İkiz Görünümü | Anomali Analiz Paneli |
 | :---: | :---: |
-| ![3D Model Görünümü](<img width="1600" height="757" alt="3d" src="https://github.com/user-attachments/assets/25c96f3b-b9fa-4146-a774-1d6cee2d5cd1" />
- | ![Dashboard Görünümü](<img width="1600" height="758" alt="3d2" src="https://github.com/user-attachments/assets/32994731-a84f-466c-9892-da8c0a02dee5" />
- |
-| *Three.js ile hazırlanan interaktif kampüs haritası.* | *Tespit edilen israfların finansal ve ekolojik dökümü.* |
-
+| <img src="https://github.com/user-attachments/assets/25c96f3b-b9fa-4146-a774-1d6cee2d5cd1" width="100%"> | <img src="https://github.com/user-attachments/assets/32994731-a84f-466c-9892-da8c0a02dee5" width="100%"> |
+| *Three.js ile hazırlanan interaktif kampüs haritası.* | *Tespit edilen israfların finansal ve ekolojik dökümü[cite: 1].* |
 ---
 
 ## Problemin Tanımı
